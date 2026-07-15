@@ -162,6 +162,16 @@ def test_phase10_catalog_has_typed_deterministic_paths() -> None:
         assert component in captions_source
 
 
+def test_phase10_studio_preview_does_not_require_placeholder_media() -> None:
+    composition_source = (ROOT / "remotion" / "src" / "Composition.tsx").read_text(encoding="utf-8")
+    root_source = (ROOT / "remotion" / "src" / "Root.tsx").read_text(encoding="utf-8")
+    assert 'input.projectId === "preview"' in composition_source
+    assert 'input.videoSrc === "cutmachine/preview/proxy.mp4"' in composition_source
+    assert "studioPreview ?" not in composition_source
+    assert "if (studioPreview) return <PreviewBackdrop />" in composition_source
+    assert 'component: "HookTitle"' in root_source
+
+
 def test_phase10_render_contract_rejects_unknown_props_components_and_paths() -> None:
     unknown = _render_document("InventedWidget")
     assert any("graphic" in error for error in validate_document(ROOT, "render-input", unknown))

@@ -139,3 +139,15 @@ Block on invalid plans/timelines, unsafe caption zones, undecodable or stream-mi
 ## 2026-07-16 - ADR-0035: Human review decisions are explicit typed state transitions
 
 Normal orchestration stops at `awaiting_review` and never approves automatically. Approval requires a current zero-blocker QC package and writes an atomic project-bound decision. Revisions must use the existing allowlisted plan-revision schema from a safe project-relative path; they preserve timeline/transcript evidence and invalidate only `plan_ready` and downstream stages.
+
+## 2026-07-16 - ADR-0036: Version the advanced visual boundary as allowlisted data
+
+Move edit plans, render inputs, and the component catalog to version 2 together. Keep every caption, component, transition, color preset, screen treatment, and prop inside strict schemas plus cross-document validation; never accept JSX, CSS, JavaScript, commands, arbitrary executable fields, or unvalidated paths from Cowork plans.
+
+## 2026-07-16 - ADR-0037: Preserve duration with bounded visual overlays
+
+Implement advanced transitions as visual overlays within authoritative scene time instead of overlapping timeline sequences. Enforce style-profile budgets for transitions, camera moves, fullscreen B-roll, animated text, and impact SFX, keep clean cuts dominant, and render screen scenes with neutral color plus bounded local-only treatments.
+
+## 2026-07-16 - ADR-0038: Bundle the Urdu font and keep preview/fallback paths deterministic
+
+Use the repository-bundled OFL-licensed Noto Naskh Arabic variable font only when its fixed path and hash validate, otherwise continue with the declared local fallback. Missing optional visual inputs must preserve a valid base composition. The exact Remotion Studio preview sentinel renders an internal deterministic backdrop so local preview does not depend on nonexistent placeholder media, while normal project inputs still require validated staged media.

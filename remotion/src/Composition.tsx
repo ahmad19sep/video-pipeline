@@ -19,10 +19,31 @@ import type { CaptionWord, RenderInput, Scene } from "./types";
 const frameAt = (seconds: number, fps: number) => Math.round(seconds * fps);
 const dbToVolume = (db: number) => 10 ** (db / 20);
 
+const PreviewBackdrop: React.FC = () => (
+  <AbsoluteFill
+    style={{
+      background:
+        "radial-gradient(circle at 72% 18%, rgba(103,232,249,0.22), transparent 34%), linear-gradient(145deg, #050811 0%, #0b1730 56%, #07101f 100%)",
+    }}
+  >
+    <AbsoluteFill
+      style={{
+        backgroundImage:
+          "linear-gradient(rgba(103,232,249,0.055) 1px, transparent 1px), linear-gradient(90deg, rgba(103,232,249,0.055) 1px, transparent 1px)",
+        backgroundSize: "48px 48px",
+        opacity: 0.65,
+      }}
+    />
+  </AbsoluteFill>
+);
+
 const SpeakerTrack: React.FC<
-  Pick<RenderInput, "videoSrc" | "timelineSegments" | "globalAudio">
-> = ({ videoSrc, timelineSegments, globalAudio }) => {
+  Pick<RenderInput, "videoSrc" | "timelineSegments" | "globalAudio"> & {
+    studioPreview: boolean;
+  }
+> = ({ videoSrc, timelineSegments, globalAudio, studioPreview }) => {
   const { fps } = useVideoConfig();
+  if (studioPreview) return <PreviewBackdrop />;
   return timelineSegments.map((segment) => {
     const from = frameAt(segment.outputStart, fps);
     const end = frameAt(segment.outputEnd, fps);
@@ -260,33 +281,43 @@ const AudioLayers: React.FC<
   );
 };
 
-export const CutMachineDraft: React.FC<RenderInput> = (input) => (
-  <AbsoluteFill
-    style={{
-      backgroundColor: "#050811",
-      color: "white",
-      fontSize: 16,
-      overflow: "hidden",
-    }}
-  >
-    <DesignFontLoader font={input.design.font} />
-    <CameraLayer design={input.design} scenes={input.scenes}>
-      <SpeakerTrack
-        videoSrc={input.videoSrc}
-        timelineSegments={input.timelineSegments}
-        globalAudio={input.globalAudio}
+export const CutMachineDraft: React.FC<RenderInput> = (input) => {
+  const studioPreview =
+    input.projectId === "preview" &&
+    input.videoSrc === "cutmachine/preview/proxy.mp4";
+  return (
+    <AbsoluteFill
+      style={{
+        backgroundColor: "#050811",
+        color: "white",
+        fontSize: 16,
+        overflow: "hidden",
+      }}
+    >
+      <DesignFontLoader font={input.design.font} />
+      <CameraLayer design={input.design} scenes={input.scenes}>
+        <SpeakerTrack
+          videoSrc={input.videoSrc}
+          timelineSegments={input.timelineSegments}
+          globalAudio={input.globalAudio}
+          studioPreview={studioPreview}
+        />
+      </CameraLayer>
+      <Broll
+        assets={input.assets}
+        design={input.design}
+        scenes={input.scenes}
       />
-    </CameraLayer>
-    <Broll assets={input.assets} design={input.design} scenes={input.scenes} />
-    <ScreenTreatments design={input.design} scenes={input.scenes} />
-    <Graphics design={input.design} scenes={input.scenes} />
-    <Captions captions={input.captions} design={input.design} />
-    <TransitionOverlays scenes={input.scenes} />
-    <AudioLayers
-      scenes={input.scenes}
-      assets={input.assets}
-      globalAudio={input.globalAudio}
-      captions={input.captions}
-    />
-  </AbsoluteFill>
-);
+      <ScreenTreatments design={input.design} scenes={input.scenes} />
+      <Graphics design={input.design} scenes={input.scenes} />
+      <Captions captions={input.captions} design={input.design} />
+      <TransitionOverlays scenes={input.scenes} />
+      <AudioLayers
+        scenes={input.scenes}
+        assets={input.assets}
+        globalAudio={input.globalAudio}
+        captions={input.captions}
+      />
+    </AbsoluteFill>
+  );
+};

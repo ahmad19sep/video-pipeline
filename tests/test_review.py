@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import re
 import shutil
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -61,7 +62,7 @@ class FakeModel:
 
 
 @pytest.fixture
-def finished_context(ingested_context: ProjectContext) -> ProjectContext:
+def finished_context(ingested_context: ProjectContext) -> Iterator[ProjectContext]:
     transcribe_project(
         ingested_context,
         model_factory=lambda _settings: FakeModel(),
