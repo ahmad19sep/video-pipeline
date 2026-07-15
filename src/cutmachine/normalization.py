@@ -197,7 +197,8 @@ def _load_lexicon(root: Path, raw_path: object) -> tuple[dict[str, str], str]:
         for key, item in mappings.items()
     ):
         raise NormalizationError("Roman Urdu mappings must use non-empty single-line strings.")
-    return cast(dict[str, str], mappings), relative
+    folded = {key.casefold(): item for key, item in cast(dict[str, str], mappings).items()}
+    return folded, relative
 
 
 def _is_boundary_character(character: str) -> bool:
@@ -262,8 +263,8 @@ def _normalize_word(
         display = f"{prefix}{approved[0]['preferred']}{suffix}"
         normalization_source = "approved-correction"
         confidence = min(confidence, 0.99)
-    elif core in lexicon:
-        display = f"{prefix}{lexicon[core]}{suffix}"
+    elif lookup in lexicon:
+        display = f"{prefix}{lexicon[lookup]}{suffix}"
         normalization_source = "local-lexicon"
         confidence = min(confidence, 0.95)
     elif not _contains_urdu(core):

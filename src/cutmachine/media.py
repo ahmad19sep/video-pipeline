@@ -177,7 +177,9 @@ def _first_stream(probe: dict[str, Any], codec_type: str) -> dict[str, Any]:
 
 
 def _duration(stream: dict[str, Any], format_info: dict[str, Any], label: str) -> float:
-    value = stream.get("duration") or format_info.get("duration")
+    value = stream.get("duration")
+    if value in (None, "", "N/A"):
+        value = format_info.get("duration")
     return _positive_float(value, f"{label} duration")
 
 
@@ -206,6 +208,17 @@ def ingest_project(context: ProjectContext) -> list[str]:
     video_stream = _first_stream(probe, "video")
     audio_stream = _first_stream(probe, "audio")
     duration = _positive_float(format_info.get("duration"), "container duration")
+    try:
+        coded_width = int(video_stream["width"])
+        coded_height = int(video_stream["height"])
+    except (KeyError, TypeError, ValueError) as exc:
+        raise MediaError("Source video stream does not declare valid dimensions.") from exc
+    rotation = _rotation(video_stream)
+    # FFmpeg auto-rotates derived media, so record display-oriented dimensions.
+    if rotation % 180 == 90:
+        display_width, display_height = coded_height, coded_width
+    else:
+        display_width, display_height = coded_width, coded_height
 
     proxy = context.project_dir / "media" / "proxy.mp4"
     original_audio = context.project_dir / "audio" / "original.wav"
@@ -325,13 +338,13 @@ def ingest_project(context: ProjectContext) -> list[str]:
         },
         "video": {
             "codec": str(video_stream.get("codec_name") or "unknown"),
-            "width": int(video_stream["width"]),
-            "height": int(video_stream["height"]),
+            "width": display_width,
+            "height": display_height,
             "pixelFormat": video_stream.get("pix_fmt"),
             "frameRate": _frame_rate(
                 video_stream.get("avg_frame_rate") or video_stream.get("r_frame_rate")
             ),
-            "rotation": _rotation(video_stream),
+            "rotation": rotation,
             "durationSeconds": _duration(video_stream, format_info, "video"),
         },
         "audio": {

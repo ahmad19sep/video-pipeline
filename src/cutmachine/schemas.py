@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -24,9 +25,22 @@ def load_schema(root: Path, name: str) -> dict[str, Any]:
     return data
 
 
+@lru_cache(maxsize=64)
+def _validator_for(root: Path, name: str, mtime_ns: int) -> Draft202012Validator:
+    return Draft202012Validator(load_schema(root, name))
+
+
 def validate_document(root: Path, name: str, document: object) -> list[str]:
-    validator = Draft202012Validator(load_schema(root, name))
-    errors = sorted(validator.iter_errors(document), key=lambda item: list(item.absolute_path))
+    path = root / "schemas" / f"{name}.schema.json"
+    try:
+        mtime_ns = path.stat().st_mtime_ns
+    except OSError as error:
+        raise SchemaError(f"Unknown schema: {name}") from error
+    validator = _validator_for(root, name, mtime_ns)
+    errors = sorted(
+        validator.iter_errors(document),
+        key=lambda item: [str(part) for part in item.absolute_path],
+    )
     return [
         f"{'/'.join(map(str, error.absolute_path)) or '<root>'}: {error.message}"
         for error in errors

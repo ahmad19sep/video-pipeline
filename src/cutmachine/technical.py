@@ -553,7 +553,8 @@ def finish_project(
         "highpass=f=70,equalizer=f=3000:t=q:w=1:g=1.5,"
         "acompressor=threshold=-18dB:ratio=2:attack=20:release=200,"
         f"loudnorm=I={target_lufs}:TP={target_peak}:LRA=11,"
-        f"alimiter=limit={limiter:.6f}"
+        f"alimiter=limit={limiter:.6f},"
+        "aresample=48000"
     )
     arguments = [
         _executable("ffmpeg"),

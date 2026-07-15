@@ -237,6 +237,32 @@ const TreatmentContents: React.FC<{
   );
 };
 
+const ZoomTrackedContents: React.FC<{
+  design: RenderInput["design"];
+  scene: Scene;
+}> = ({ design, scene }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  // Mirror the zoom applied to the underlying content in CameraLayer so
+  // cursor, click, label, and blur annotations stay glued to what they mark.
+  const zoom = screenZoomStyle(scene, frame / fps);
+  return (
+    <div
+      style={{
+        bottom: 0,
+        left: 0,
+        position: "absolute",
+        right: 0,
+        scale: zoom.scale,
+        top: 0,
+        transformOrigin: zoom.transformOrigin,
+      }}
+    >
+      <TreatmentContents design={design} scene={scene} />
+    </div>
+  );
+};
+
 export const ScreenTreatments: React.FC<
   Pick<RenderInput, "design" | "scenes">
 > = ({ design, scenes }) => {
@@ -254,7 +280,7 @@ export const ScreenTreatments: React.FC<
       >
         <AbsoluteFill style={{ pointerEvents: "none" }}>
           <ScreenFrame frame={scene.screenTreatment.frame}>
-            <TreatmentContents design={design} scene={scene} />
+            <ZoomTrackedContents design={design} scene={scene} />
           </ScreenFrame>
         </AbsoluteFill>
       </Sequence>

@@ -72,13 +72,19 @@ class ProjectLock(AbstractContextManager["ProjectLock"]):
 
     def _reclaim_if_stale(self) -> bool:
         try:
-            data = json.loads(self.path.read_text(encoding="ascii"))
+            stale_payload = self.path.read_bytes()
+            data = json.loads(stale_payload.decode("ascii"))
             pid = int(data.get("pid", -1))
         except (OSError, ValueError, json.JSONDecodeError, AttributeError):
             return False
         if _process_exists(pid):
             return False
+        # The liveness probe above can take seconds; another process may have
+        # reclaimed and recreated the lock meanwhile. Delete only the exact
+        # payload that was judged stale so a live owner's lock is never removed.
         try:
+            if self.path.read_bytes() != stale_payload:
+                return False
             self.path.unlink()
         except OSError:
             return False
