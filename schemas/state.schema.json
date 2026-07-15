@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cutmachine.local/schemas/state-v1.schema.json",
+  "title": "CutMachine Project State v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "projectId", "workflowState", "runStatus", "updatedAt", "stages", "history"],
+  "properties": {
+    "version": {"const": 1},
+    "projectId": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"},
+    "workflowState": {"enum": ["created", "validated", "ingested", "transcribed", "normalized", "analyzed", "timeline_ready", "plan_ready", "assets_ready", "preprocessed", "draft_rendered", "qc_passed", "awaiting_review", "revision_requested", "approved", "final_rendered", "completed", "failed", "cancelled"]},
+    "runStatus": {"enum": ["active", "failed", "cancelled", "completed"]},
+    "failedStage": {"type": ["string", "null"]},
+    "updatedAt": {"type": "string", "format": "date-time"},
+    "stages": {
+      "type": "array",
+      "minItems": 16,
+      "maxItems": 16,
+      "items": {"$ref": "#/$defs/stage"}
+    },
+    "history": {"type": "array", "items": {"$ref": "#/$defs/event"}}
+  },
+  "$defs": {
+    "safeRelativePath": {
+      "type": "string",
+      "minLength": 1,
+      "allOf": [
+        {"not": {"pattern": "(^[A-Za-z]:)|(^/)|(^\\\\)|(^~)"}},
+        {"not": {"pattern": "(^|[\\\\/])\\.\\.([\\\\/]|$)"}}
+      ]
+    },
+    "stage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "status", "attempts", "startedAt", "completedAt", "error", "artifacts"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "status": {"enum": ["pending", "running", "completed", "failed", "invalidated"]},
+        "attempts": {"type": "integer", "minimum": 0},
+        "startedAt": {"type": ["string", "null"], "format": "date-time"},
+        "completedAt": {"type": ["string", "null"], "format": "date-time"},
+        "error": {"type": ["string", "null"]},
+        "artifacts": {"type": "array", "items": {"$ref": "#/$defs/safeRelativePath"}}
+      }
+    },
+    "event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["at", "action", "stage", "detail"],
+      "properties": {
+        "at": {"type": "string", "format": "date-time"},
+        "action": {"enum": ["initialized", "started", "completed", "failed", "recovered", "invalidated", "revision_requested"]},
+        "stage": {"type": "string", "minLength": 1},
+        "detail": {"type": ["string", "null"]}
+      }
+    }
+  }
+}

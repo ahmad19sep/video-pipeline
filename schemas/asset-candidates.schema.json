@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cutmachine.local/schemas/asset-candidates-v1.schema.json",
+  "title": "CutMachine Asset Candidates v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "projectId", "createdAt", "candidates"],
+  "properties": {
+    "version": {"const": 1}, "projectId": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"}, "createdAt": {"type": "string", "format": "date-time"},
+    "candidates": {"type": "array", "items": {"$ref": "#/$defs/candidate"}}
+  },
+  "$defs": {
+    "safeRelativePath": {"type": "string", "minLength": 1, "allOf": [{"not": {"pattern": "(^[A-Za-z]:)|(^/)|(^\\\\)|(^~)"}}, {"not": {"pattern": "(^|[\\\\/])\\.\\.([\\\\/]|$)"}}]},
+    "httpsUrl": {"type": "string", "pattern": "^https://", "maxLength": 2000},
+    "candidate": {"type": "object", "additionalProperties": false, "required": ["id", "requestId", "tier", "provider", "providerId", "type", "localPath", "downloadUrl", "sourcePage", "creator", "license", "attributionRequired", "tags", "duration", "width", "height", "orientation", "watermark", "usageCount"], "properties": {
+      "id": {"type": "string", "pattern": "^candidate_[A-Za-z0-9_-]+$"}, "requestId": {"type": "string", "pattern": "^request_[0-9]{6}$"}, "tier": {"enum": ["local", "cache", "provider"]}, "provider": {"enum": ["local", "cache", "pexels"]}, "providerId": {"type": "string", "minLength": 1, "maxLength": 160}, "type": {"enum": ["video", "image", "audio"]},
+      "localPath": {"anyOf": [{"$ref": "#/$defs/safeRelativePath"}, {"type": "null"}]}, "downloadUrl": {"anyOf": [{"$ref": "#/$defs/httpsUrl"}, {"type": "null"}]}, "sourcePage": {"anyOf": [{"$ref": "#/$defs/httpsUrl"}, {"type": "null"}]}, "creator": {"type": ["string", "null"], "maxLength": 160}, "license": {"type": "string", "minLength": 1, "maxLength": 120}, "attributionRequired": {"type": "boolean"}, "tags": {"type": "array", "maxItems": 50, "items": {"type": "string", "minLength": 1, "maxLength": 60}},
+      "duration": {"type": ["number", "null"], "exclusiveMinimum": 0}, "width": {"type": ["integer", "null"], "minimum": 1}, "height": {"type": ["integer", "null"], "minimum": 1}, "orientation": {"enum": ["portrait", "landscape", "square", "audio", "unknown"]}, "watermark": {"type": "boolean"}, "usageCount": {"type": "integer", "minimum": 0}
+    }}
+  }
+}

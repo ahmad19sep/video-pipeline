@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cutmachine.local/schemas/technical-finish-v1.schema.json",
+  "title": "CutMachine Technical Finish v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "projectId", "createdAt", "sourcePath", "outputPath", "sceneClassificationPath", "reframePath", "colorPath", "audioPath", "operations", "sha256", "duration", "width", "height", "videoCodec", "audioCodec"],
+  "properties": {
+    "version": {"const": 1}, "projectId": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"}, "createdAt": {"type": "string", "format": "date-time"}, "sourcePath": {"$ref": "#/$defs/safeRelativePath"}, "outputPath": {"$ref": "#/$defs/safeRelativePath"}, "sceneClassificationPath": {"$ref": "#/$defs/safeRelativePath"}, "reframePath": {"$ref": "#/$defs/safeRelativePath"}, "colorPath": {"$ref": "#/$defs/safeRelativePath"}, "audioPath": {"$ref": "#/$defs/safeRelativePath"}, "operations": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["center-crop", "face-aware-crop", "neutral-framing", "bounded-color", "licensed-lut", "speech-mastering"]}}, "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}, "duration": {"type": "number", "exclusiveMinimum": 0}, "width": {"type": "integer", "minimum": 2}, "height": {"type": "integer", "minimum": 2}, "videoCodec": {"type": "string", "minLength": 1}, "audioCodec": {"type": "string", "minLength": 1}
+  },
+  "$defs": {"safeRelativePath": {"type": "string", "minLength": 1, "allOf": [{"not": {"pattern": "(^[A-Za-z]:)|(^/)|(^\\\\)|(^~)"}}, {"not": {"pattern": "(^|[\\\\/])\\.\\.([\\\\/]|$)"}}]}}
+}

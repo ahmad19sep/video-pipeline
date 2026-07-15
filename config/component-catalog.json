@@ -1,0 +1,24 @@
+{
+  "version": 2,
+  "components": [
+    {"name": "HookTitle", "category": "title", "implementationPhase": 6, "allowedProps": {"title": "string", "subtitle": "string"}, "requiredProps": ["title"]},
+    {"name": "DefinitionCard", "category": "information", "implementationPhase": 6, "allowedProps": {"term": "string", "definition": "string"}, "requiredProps": ["term", "definition"]},
+    {"name": "LowerThird", "category": "title", "implementationPhase": 6, "allowedProps": {"name": "string", "role": "string"}, "requiredProps": ["name"]},
+    {"name": "EndCallToAction", "category": "cta", "implementationPhase": 6, "allowedProps": {"text": "string"}, "requiredProps": ["text"]},
+    {"name": "StepCard", "category": "information", "implementationPhase": 10, "allowedProps": {"step": "number", "title": "string", "body": "string"}, "requiredProps": ["step", "title"]},
+    {"name": "ComparisonCard", "category": "information", "implementationPhase": 10, "allowedProps": {"leftTitle": "string", "rightTitle": "string", "leftItems": "string-array", "rightItems": "string-array"}, "requiredProps": ["leftTitle", "rightTitle", "leftItems", "rightItems"]},
+    {"name": "ToolLogoRow", "category": "information", "implementationPhase": 10, "allowedProps": {"tools": "string-array"}, "requiredProps": ["tools"]},
+    {"name": "BrowserWindow", "category": "screen", "implementationPhase": 10, "allowedProps": {"title": "string", "address": "string", "steps": "string-array"}, "requiredProps": ["title"]},
+    {"name": "MobileScreenFrame", "category": "screen", "implementationPhase": 10, "allowedProps": {"title": "string", "steps": "string-array"}, "requiredProps": ["title"]},
+    {"name": "QuoteCard", "category": "information", "implementationPhase": 10, "allowedProps": {"quote": "string", "attribution": "string"}, "requiredProps": ["quote"]},
+    {"name": "StatisticCard", "category": "data", "implementationPhase": 10, "allowedProps": {"value": "string", "label": "string", "source": "string"}, "requiredProps": ["value", "label"]},
+    {"name": "WarningCard", "category": "information", "implementationPhase": 10, "allowedProps": {"title": "string", "body": "string"}, "requiredProps": ["title"]},
+    {"name": "QuestionCard", "category": "information", "implementationPhase": 10, "allowedProps": {"question": "string"}, "requiredProps": ["question"]},
+    {"name": "TimelineGraphic", "category": "data", "implementationPhase": 10, "allowedProps": {"items": "string-array"}, "requiredProps": ["items"]},
+    {"name": "FeatureList", "category": "information", "implementationPhase": 10, "allowedProps": {"title": "string", "items": "string-array"}, "requiredProps": ["title", "items"]},
+    {"name": "ProgressIndicator", "category": "data", "implementationPhase": 10, "allowedProps": {"label": "string", "value": "number"}, "requiredProps": ["label", "value"]},
+    {"name": "PictureInPicture", "category": "layout", "implementationPhase": 10, "allowedProps": {"label": "string"}, "requiredProps": []},
+    {"name": "FullscreenBroll", "category": "layout", "implementationPhase": 10, "allowedProps": {"label": "string"}, "requiredProps": []},
+    {"name": "SplitScreen", "category": "layout", "implementationPhase": 10, "allowedProps": {"leftLabel": "string", "rightLabel": "string"}, "requiredProps": []}
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cutmachine.local/schemas/asset-manifest-v2.schema.json",
+  "title": "CutMachine Asset Manifest v2",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "projectId", "createdAt", "assets", "requests"],
+  "properties": {
+    "version": {"const": 2}, "projectId": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"}, "createdAt": {"type": "string", "format": "date-time"},
+    "assets": {"type": "array", "items": {"$ref": "#/$defs/asset"}},
+    "requests": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["requestId", "status", "assetId", "selectedScene", "relevanceScore"], "properties": {"requestId": {"type": "string", "pattern": "^request_[0-9]{6}$"}, "status": {"enum": ["resolved", "graphic-fallback", "missing"]}, "assetId": {"type": ["string", "null"]}, "selectedScene": {"type": ["string", "null"]}, "relevanceScore": {"type": ["number", "null"], "minimum": 0, "maximum": 1}}}}
+  },
+  "$defs": {
+    "safeRelativePath": {"type": "string", "minLength": 1, "allOf": [{"not": {"pattern": "(^[A-Za-z]:)|(^/)|(^\\\\)|(^~)"}}, {"not": {"pattern": "(^|[\\\\/])\\.\\.([\\\\/]|$)"}}]},
+    "httpsUrl": {"type": "string", "pattern": "^https://", "maxLength": 2000},
+    "asset": {"type": "object", "additionalProperties": false, "required": ["id", "path", "type", "query", "provider", "providerId", "creator", "license", "attributionRequired", "sourcePage", "retrievedAt", "sha256", "duration", "width", "height", "selectedScene", "relevanceScore"], "properties": {
+      "id": {"type": "string", "pattern": "^asset_[a-f0-9]{16}$"}, "path": {"$ref": "#/$defs/safeRelativePath"}, "type": {"enum": ["video", "image", "audio"]}, "query": {"type": "string", "minLength": 1, "maxLength": 80}, "provider": {"enum": ["local", "cache", "pexels"]}, "providerId": {"type": "string", "minLength": 1}, "creator": {"type": ["string", "null"]}, "license": {"type": "string", "minLength": 1}, "attributionRequired": {"type": "boolean"}, "sourcePage": {"anyOf": [{"$ref": "#/$defs/httpsUrl"}, {"type": "null"}]}, "retrievedAt": {"type": "string", "format": "date-time"}, "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}, "duration": {"type": ["number", "null"], "exclusiveMinimum": 0}, "width": {"type": ["integer", "null"], "minimum": 1}, "height": {"type": ["integer", "null"], "minimum": 1}, "selectedScene": {"type": ["string", "null"]}, "relevanceScore": {"type": "number", "minimum": 0, "maximum": 1}
+    }}
+  }
+}

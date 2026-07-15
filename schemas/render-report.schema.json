@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cutmachine.local/schemas/render-report-v1.schema.json",
+  "title": "CutMachine Render Report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "projectId", "quality", "output", "duration", "videoStream", "audioStream", "blockingIssues"],
+  "properties": {
+    "version": {"const": 1},
+    "projectId": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"},
+    "quality": {"enum": ["draft", "final"]},
+    "output": {"type": "string", "minLength": 1},
+    "duration": {"type": "number", "exclusiveMinimum": 0},
+    "videoStream": {"type": "boolean"},
+    "audioStream": {"type": "boolean"},
+    "blockingIssues": {"type": "array", "items": {"type": "string"}},
+    "warnings": {"type": "array", "items": {"type": "string"}}
+  }
+}
+

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "terms": [
+    "ChatGPT",
+    "OpenAI",
+    "Claude",
+    "Gemini",
+    "Remotion",
+    "Python",
+    "JavaScript",
+    "TypeScript",
+    "API",
+    "AI",
+    "LLM"
+  ],
+  "aliases": {
+    "چیٹ جی پی ٹی": "ChatGPT",
+    "اوپن اے آئی": "OpenAI",
+    "کلاڈ": "Claude",
+    "جیمنائی": "Gemini",
+    "ریمورشن": "Remotion",
+    "پائتھن": "Python",
+    "جاوا اسکرپٹ": "JavaScript",
+    "ٹائپ اسکرپٹ": "TypeScript",
+    "اے پی آئی": "API",
+    "اے آئی": "AI",
+    "ایل ایل ایم": "LLM"
+  }
+}

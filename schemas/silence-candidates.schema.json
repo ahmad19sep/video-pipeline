@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cutmachine.local/schemas/silence-candidates-v1.schema.json",
+  "title": "CutMachine Silence Candidates v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "projectId", "generatedAt", "sourceDuration", "policy", "ffmpegIntervals", "candidates"],
+  "properties": {
+    "version": {"const": 1},
+    "projectId": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"},
+    "generatedAt": {"type": "string", "format": "date-time"},
+    "sourceDuration": {"type": "number", "exclusiveMinimum": 0},
+    "policy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["thresholdDb", "minimumSeconds", "autoRemoveSeconds", "paddingBefore", "paddingAfter"],
+      "properties": {
+        "thresholdDb": {"type": "number"}, "minimumSeconds": {"type": "number", "exclusiveMinimum": 0},
+        "autoRemoveSeconds": {"type": "number", "exclusiveMinimum": 0}, "paddingBefore": {"type": "number", "minimum": 0},
+        "paddingAfter": {"type": "number", "minimum": 0}
+      }
+    },
+    "ffmpegIntervals": {"type": "array", "items": {"$ref": "#/$defs/interval"}},
+    "candidates": {"type": "array", "items": {"$ref": "#/$defs/candidate"}}
+  },
+  "$defs": {
+    "interval": {
+      "type": "object", "additionalProperties": false, "required": ["start", "end"],
+      "properties": {"start": {"type": "number", "minimum": 0}, "end": {"type": "number", "exclusiveMinimum": 0}}
+    },
+    "candidate": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "type", "sourceStart", "sourceEnd", "duration", "confidence", "decision", "automatic", "evidence", "proposedCutStart", "proposedCutEnd"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^silence_[0-9]{6}$"},
+        "type": {"enum": ["leading-silence", "internal-silence", "trailing-silence", "no-speech"]},
+        "sourceStart": {"type": "number", "minimum": 0}, "sourceEnd": {"type": "number", "exclusiveMinimum": 0},
+        "duration": {"type": "number", "exclusiveMinimum": 0}, "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "decision": {"enum": ["remove", "review", "keep"]}, "automatic": {"type": "boolean"},
+        "evidence": {
+          "type": "object", "additionalProperties": false, "required": ["wordGap", "ffmpegSilence", "noWordOverlap"],
+          "properties": {"wordGap": {"const": true}, "ffmpegSilence": {"type": "boolean"}, "noWordOverlap": {"const": true}}
+        },
+        "proposedCutStart": {"type": ["number", "null"], "minimum": 0},
+        "proposedCutEnd": {"type": ["number", "null"], "minimum": 0}
+      }
+    }
+  }
+}

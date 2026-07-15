@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cutmachine.local/schemas/final-pass-v1.schema.json",
+  "title": "CutMachine Draft Final FFmpeg Pass v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "projectId", "createdAt", "inputKind", "outputPath", "operation", "sha256", "duration", "videoCodec", "audioCodec"],
+  "properties": {"version": {"const": 1}, "projectId": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"}, "createdAt": {"type": "string", "format": "date-time"}, "inputKind": {"const": "remotion-draft"}, "outputPath": {"$ref": "#/$defs/safeRelativePath"}, "operation": {"const": "stream-copy-faststart"}, "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}, "duration": {"type": "number", "exclusiveMinimum": 0}, "videoCodec": {"type": "string", "minLength": 1}, "audioCodec": {"type": "string", "minLength": 1}},
+  "$defs": {"safeRelativePath": {"type": "string", "minLength": 1, "allOf": [{"not": {"pattern": "(^[A-Za-z]:)|(^/)|(^\\\\)|(^~)"}}, {"not": {"pattern": "(^|[\\\\/])\\.\\.([\\\\/]|$)"}}]}}
+}

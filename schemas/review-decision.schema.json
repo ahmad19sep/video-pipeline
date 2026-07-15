@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cutmachine.local/schemas/review-decision-v1.schema.json",
+  "title": "CutMachine Review Decision v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "projectId", "createdAt", "action", "note", "qcReportPath", "qcReportSha256", "revisionPath", "revisionSha256", "invalidateFrom"],
+  "properties": {
+    "version": {"const": 1}, "projectId": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"}, "createdAt": {"type": "string", "format": "date-time"}, "action": {"enum": ["approved", "revision-requested"]}, "note": {"type": ["string", "null"], "minLength": 1, "maxLength": 1000}, "qcReportPath": {"$ref": "#/$defs/safeRelativePath"}, "qcReportSha256": {"$ref": "#/$defs/sha256"}, "revisionPath": {"anyOf": [{"$ref": "#/$defs/safeRelativePath"}, {"type": "null"}]}, "revisionSha256": {"anyOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]}, "invalidateFrom": {"type": ["string", "null"], "enum": ["plan_ready", null]}
+  },
+  "$defs": {
+    "safeRelativePath": {"type": "string", "minLength": 1, "allOf": [{"not": {"pattern": "(^[A-Za-z]:)|(^/)|(^\\\\)|(^~)"}}, {"not": {"pattern": "(^|[\\\\/])\\.\\.([\\\\/]|$)"}}]},
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  }
+}

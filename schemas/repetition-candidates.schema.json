@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cutmachine.local/schemas/repetition-candidates-v1.schema.json",
+  "title": "CutMachine Repetition Candidates v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "projectId", "generatedAt", "policy", "candidates"],
+  "properties": {
+    "version": {"const": 1}, "projectId": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"},
+    "generatedAt": {"type": "string", "format": "date-time"},
+    "policy": {
+      "type": "object", "additionalProperties": false, "required": ["similarityThreshold", "nearbySeconds", "automaticRemovalEnabled"],
+      "properties": {"similarityThreshold": {"type": "number", "minimum": 0, "maximum": 1}, "nearbySeconds": {"type": "number", "exclusiveMinimum": 0}, "automaticRemovalEnabled": {"const": false}}
+    },
+    "candidates": {
+      "type": "array", "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "firstSegmentId", "secondSegmentId", "sourceStart", "sourceEnd", "similarity", "decision", "automatic", "reason"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^repetition_[0-9]{6}$"},
+          "firstSegmentId": {"type": "string", "pattern": "^segment_[0-9]{6}$"}, "secondSegmentId": {"type": "string", "pattern": "^segment_[0-9]{6}$"},
+          "sourceStart": {"type": "number", "minimum": 0}, "sourceEnd": {"type": "number", "exclusiveMinimum": 0},
+          "similarity": {"type": "number", "minimum": 0, "maximum": 1}, "decision": {"const": "review"},
+          "automatic": {"const": false}, "reason": {"const": "possible-nearby-repetition"}
+        }
+      }
+    }
+  }
+}

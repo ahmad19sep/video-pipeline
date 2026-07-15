@@ -1,0 +1,11 @@
+style:
+  name: energetic
+  visual_change_target_seconds: 2.8
+  transition_density: medium
+  caption_preset: roman-word-highlight
+  effect_budgets:
+    transitions_per_minute: 8
+    camera_moves_per_minute: 10
+    fullscreen_broll_ratio: 0.5
+    animated_text_per_minute: 14
+    impact_sfx_per_minute: 8

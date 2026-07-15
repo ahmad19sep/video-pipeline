@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cutmachine.local/schemas/audio-mastering-v1.schema.json",
+  "title": "CutMachine Audio Mastering v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "projectId", "createdAt", "targetLufs", "targetTruePeakDb", "speechPresent", "chain", "before", "after"],
+  "properties": {
+    "version": {"const": 1}, "projectId": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"}, "createdAt": {"type": "string", "format": "date-time"}, "targetLufs": {"type": "number", "minimum": -24, "maximum": -8}, "targetTruePeakDb": {"type": "number", "minimum": -6, "maximum": 0}, "speechPresent": {"type": "boolean"}, "chain": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["highpass", "gentle-eq", "compression", "loudness-normalization", "true-peak-limit"]}},
+    "before": {"$ref": "#/$defs/metrics"}, "after": {"$ref": "#/$defs/metrics"}
+  },
+  "$defs": {"metrics": {"type": "object", "additionalProperties": false, "required": ["integratedLufs", "truePeakDb"], "properties": {"integratedLufs": {"type": "number", "minimum": -100, "maximum": 10}, "truePeakDb": {"type": "number", "minimum": -100, "maximum": 10}}}}
+}

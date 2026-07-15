@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cutmachine.local/schemas/asset-requests-v1.schema.json",
+  "title": "CutMachine Asset Requests v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "projectId", "createdAt", "requests"],
+  "properties": {
+    "version": {"const": 1}, "projectId": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"}, "createdAt": {"type": "string", "format": "date-time"},
+    "requests": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["id", "kind", "query", "sceneId", "orientation", "targetDuration", "optional"], "properties": {
+      "id": {"type": "string", "pattern": "^request_[0-9]{6}$"}, "kind": {"enum": ["broll", "music", "sfx"]}, "query": {"type": "string", "minLength": 1, "maxLength": 80, "pattern": "^[ -~]+$"}, "sceneId": {"anyOf": [{"type": "string", "pattern": "^scene_[0-9]{6}$"}, {"type": "null"}]}, "orientation": {"enum": ["portrait", "landscape", "square", "any"]}, "targetDuration": {"type": ["number", "null"], "exclusiveMinimum": 0}, "optional": {"const": true}
+    }}}
+  }
+}

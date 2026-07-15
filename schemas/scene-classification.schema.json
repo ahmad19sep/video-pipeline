@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cutmachine.local/schemas/scene-classification-v1.schema.json",
+  "title": "CutMachine Scene Classification v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "projectId", "createdAt", "scenes"],
+  "properties": {
+    "version": {"const": 1}, "projectId": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"}, "createdAt": {"type": "string", "format": "date-time"},
+    "scenes": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["sceneId", "start", "end", "classification", "confidence", "preserveNeutral", "evidence"], "properties": {
+      "sceneId": {"type": "string", "pattern": "^scene_[0-9]{6}$"}, "start": {"type": "number", "minimum": 0}, "end": {"type": "number", "exclusiveMinimum": 0}, "classification": {"enum": ["talking-head", "screen-recording", "mobile-screen", "stock-footage", "outdoor", "low-light", "uncertain"]}, "confidence": {"type": "number", "minimum": 0, "maximum": 1}, "preserveNeutral": {"type": "boolean"}, "evidence": {"type": "array", "minItems": 1, "maxItems": 10, "items": {"type": "string", "minLength": 1, "maxLength": 160}}
+    }}}
+  }
+}

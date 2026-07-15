@@ -1,0 +1,13 @@
+style:
+  name: balanced
+  visual_change_target_seconds: 4.5
+  transition_density: low
+  caption_preset: roman-word-highlight
+  effect_budgets:
+    transitions_per_minute: 4
+    camera_moves_per_minute: 6
+    fullscreen_broll_ratio: 0.35
+    animated_text_per_minute: 8
+    impact_sfx_per_minute: 4
+transcription:
+  preset: balanced

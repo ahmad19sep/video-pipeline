@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cutmachine.local/schemas/asset-ranking-v1.schema.json",
+  "title": "CutMachine Asset Ranking v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "projectId", "createdAt", "selections"],
+  "properties": {
+    "version": {"const": 1}, "projectId": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"}, "createdAt": {"type": "string", "format": "date-time"},
+    "selections": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["requestId", "candidateId", "status", "tier", "totalScore", "scores", "reason"], "properties": {
+      "requestId": {"type": "string", "pattern": "^request_[0-9]{6}$"}, "candidateId": {"type": ["string", "null"]}, "status": {"enum": ["resolved", "graphic-fallback", "missing"]}, "tier": {"enum": ["local", "cache", "provider", "none"]}, "totalScore": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+      "scores": {"type": "object", "additionalProperties": false, "required": ["query", "orientation", "duration", "resolution", "quality", "license", "reuse"], "properties": {"query": {"type": "number", "minimum": 0, "maximum": 1}, "orientation": {"type": "number", "minimum": 0, "maximum": 1}, "duration": {"type": "number", "minimum": 0, "maximum": 1}, "resolution": {"type": "number", "minimum": 0, "maximum": 1}, "quality": {"type": "number", "minimum": 0, "maximum": 1}, "license": {"type": "number", "minimum": 0, "maximum": 1}, "reuse": {"type": "number", "minimum": 0, "maximum": 1}}}, "reason": {"type": "string", "minLength": 1, "maxLength": 300}
+    }}}
+  }
+}

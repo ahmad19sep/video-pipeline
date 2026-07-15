@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cutmachine.local/schemas/planning-input-v1.schema.json",
+  "title": "CutMachine Cowork Planning Input v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "projectId", "mode", "paths", "constraints"],
+  "properties": {
+    "version": {"const": 1},
+    "projectId": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"},
+    "mode": {"enum": ["fast", "balanced", "energetic", "cinematic"]},
+    "paths": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["transcript", "timeline", "contactSheet", "componentCatalog", "editPlan"],
+      "properties": {
+        "transcript": {"$ref": "#/$defs/safeRelativePath"},
+        "timeline": {"$ref": "#/$defs/safeRelativePath"},
+        "contactSheet": {"$ref": "#/$defs/safeRelativePath"},
+        "componentCatalog": {"$ref": "#/$defs/safeRelativePath"},
+        "editPlan": {"$ref": "#/$defs/safeRelativePath"}
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["jsonOnly", "localFirst", "preserveWordTiming", "allowExecutableContent", "allowUnknownComponents"],
+      "properties": {
+        "jsonOnly": {"const": true},
+        "localFirst": {"const": true},
+        "preserveWordTiming": {"const": true},
+        "allowExecutableContent": {"const": false},
+        "allowUnknownComponents": {"const": false}
+      }
+    }
+  },
+  "$defs": {
+    "safeRelativePath": {
+      "type": "string", "minLength": 1,
+      "allOf": [{"not": {"pattern": "(^[A-Za-z]:)|(^/)|(^\\\\)|(^~)"}}, {"not": {"pattern": "(^|[\\\\/])\\.\\.([\\\\/]|$)"}}]
+    }
+  }
+}

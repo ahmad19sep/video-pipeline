@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cutmachine.local/schemas/project-v1.schema.json",
+  "title": "CutMachine Project v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "projectId", "slug", "createdAt", "sourceHash", "mode", "source", "settings"],
+  "properties": {
+    "version": {"const": 1},
+    "projectId": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"},
+    "slug": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+    "createdAt": {"type": "string", "format": "date-time"},
+    "sourceHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "mode": {"enum": ["fast", "balanced", "energetic", "cinematic"]},
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["originalName", "storedPath", "extension", "sizeBytes", "sha256"],
+      "properties": {
+        "originalName": {"type": "string", "minLength": 1},
+        "storedPath": {"$ref": "#/$defs/safeRelativePath"},
+        "extension": {"enum": [".mp4", ".mov", ".mkv", ".avi", ".webm", ".m4v"]},
+        "sizeBytes": {"type": "integer", "minimum": 1},
+        "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      }
+    },
+    "settings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["language", "captionLanguage", "networkEnabled"],
+      "properties": {
+        "language": {"const": "ur"},
+        "captionLanguage": {"enum": ["roman-urdu", "urdu-script", "english"]},
+        "networkEnabled": {"type": "boolean"}
+      }
+    }
+  },
+  "$defs": {
+    "safeRelativePath": {
+      "type": "string",
+      "minLength": 1,
+      "allOf": [
+        {"not": {"pattern": "(^[A-Za-z]:)|(^/)|(^\\\\)|(^~)"}},
+        {"not": {"pattern": "(^|[\\\\/])\\.\\.([\\\\/]|$)"}}
+      ]
+    }
+  }
+}
+

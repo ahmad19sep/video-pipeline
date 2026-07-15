@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cutmachine.local/schemas/timeline-v1.schema.json",
+  "title": "CutMachine Source Timeline v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "projectId", "sourceDuration", "outputDuration", "segments", "cuts"],
+  "properties": {
+    "version": {"const": 1},
+    "projectId": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"},
+    "sourceDuration": {"type": "number", "exclusiveMinimum": 0},
+    "outputDuration": {"type": "number", "exclusiveMinimum": 0},
+    "segments": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/keep"}},
+    "cuts": {"type": "array", "items": {"$ref": "#/$defs/cut"}}
+  },
+  "$defs": {
+    "keep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "sourceStart", "sourceEnd", "outputStart", "outputEnd", "reason", "decision"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^keep_[0-9]{6}$"},
+        "sourceStart": {"type": "number", "minimum": 0},
+        "sourceEnd": {"type": "number", "exclusiveMinimum": 0},
+        "outputStart": {"type": "number", "minimum": 0},
+        "outputEnd": {"type": "number", "exclusiveMinimum": 0},
+        "reason": {"const": "retained-source"},
+        "decision": {"const": "keep"}
+      }
+    },
+    "cut": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "candidateId", "sourceStart", "sourceEnd", "type", "confidence", "decision", "decidedBy", "automatic", "padding"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^cut_[0-9]{6}$"},
+        "candidateId": {"type": "string", "pattern": "^silence_[0-9]{6}$"},
+        "sourceStart": {"type": "number", "minimum": 0},
+        "sourceEnd": {"type": "number", "exclusiveMinimum": 0},
+        "type": {"enum": ["leading-silence", "internal-silence", "trailing-silence"]},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "decision": {"const": "remove"},
+        "decidedBy": {"const": "automatic-rule"},
+        "automatic": {"const": true},
+        "padding": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["before", "after"],
+          "properties": {
+            "before": {"type": "number", "minimum": 0},
+            "after": {"type": "number", "minimum": 0}
+          }
+        }
+      }
+    }
+  }
+}

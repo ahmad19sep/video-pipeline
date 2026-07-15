@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cutmachine.local/schemas/review-package-v1.schema.json",
+  "title": "CutMachine Static Review Package v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "projectId", "createdAt", "htmlPath", "htmlSha256", "draftPath", "draftSha256", "qcReportPath", "qcReportSha256", "beforeFramePath", "beforeFrameSha256", "afterFramePath", "afterFrameSha256", "assetPreviews", "readOnly", "remoteResources"],
+  "properties": {
+    "version": {"const": 1}, "projectId": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"}, "createdAt": {"type": "string", "format": "date-time"},
+    "htmlPath": {"$ref": "#/$defs/safeRelativePath"}, "htmlSha256": {"$ref": "#/$defs/sha256"}, "draftPath": {"$ref": "#/$defs/safeRelativePath"}, "draftSha256": {"$ref": "#/$defs/sha256"}, "qcReportPath": {"$ref": "#/$defs/safeRelativePath"}, "qcReportSha256": {"$ref": "#/$defs/sha256"}, "beforeFramePath": {"$ref": "#/$defs/safeRelativePath"}, "beforeFrameSha256": {"$ref": "#/$defs/sha256"}, "afterFramePath": {"$ref": "#/$defs/safeRelativePath"}, "afterFrameSha256": {"$ref": "#/$defs/sha256"},
+    "assetPreviews": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/preview"}}, "readOnly": {"const": true}, "remoteResources": {"const": false}
+  },
+  "$defs": {
+    "safeRelativePath": {"type": "string", "minLength": 1, "allOf": [{"not": {"pattern": "(^[A-Za-z]:)|(^/)|(^\\\\)|(^~)"}}, {"not": {"pattern": "(^|[\\\\/])\\.\\.([\\\\/]|$)"}}]},
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "preview": {"type": "object", "additionalProperties": false, "required": ["assetId", "path", "sha256"], "properties": {"assetId": {"type": "string", "pattern": "^asset_[a-f0-9]{16}$"}, "path": {"$ref": "#/$defs/safeRelativePath"}, "sha256": {"$ref": "#/$defs/sha256"}}}
+  }
+}

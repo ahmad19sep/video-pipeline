@@ -1,0 +1,242 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cutmachine.local/schemas/render-input-v2.schema.json",
+  "title": "CutMachine Remotion Draft Input v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "projectId", "videoSrc", "video", "timelineSegments", "captions", "scenes", "globalAudio", "design", "assets"],
+  "properties": {
+    "version": {"const": 2},
+    "projectId": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"},
+    "videoSrc": {"$ref": "#/$defs/safeRelativePath"},
+    "video": {
+      "type": "object", "additionalProperties": false,
+      "required": ["fps", "width", "height", "durationInSeconds"],
+      "properties": {
+        "fps": {"type": "number", "minimum": 1, "maximum": 120},
+        "width": {"type": "integer", "minimum": 240, "maximum": 7680},
+        "height": {"type": "integer", "minimum": 240, "maximum": 7680},
+        "durationInSeconds": {"type": "number", "exclusiveMinimum": 0}
+      }
+    },
+    "timelineSegments": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/timelineSegment"}},
+    "captions": {"$ref": "#/$defs/captions"},
+    "scenes": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/scene"}},
+    "globalAudio": {
+      "type": "object", "additionalProperties": false,
+      "required": ["voiceGainDb", "musicAssetId", "musicGainDb", "duckingEnabled"],
+      "properties": {
+        "voiceGainDb": {"type": "number", "minimum": -24, "maximum": 12},
+        "musicAssetId": {"type": ["string", "null"]},
+        "musicGainDb": {"type": "number", "minimum": -60, "maximum": 0},
+        "duckingEnabled": {"type": "boolean"}
+      }
+    },
+    "design": {"$ref": "#/$defs/design"},
+    "assets": {"type": "object", "additionalProperties": {"$ref": "#/$defs/safeRelativePath"}}
+  },
+  "$defs": {
+    "safeRelativePath": {
+      "type": "string", "minLength": 1,
+      "allOf": [
+        {"not": {"pattern": "(^[A-Za-z]:)|(^/)|(^\\\\)|(^~)"}},
+        {"not": {"pattern": "(^|[\\\\/])\\.\\.([\\\\/]|$)"}}
+      ]
+    },
+    "timelineSegment": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "sourceStart", "sourceEnd", "outputStart", "outputEnd"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^keep_[0-9]{6}$"},
+        "sourceStart": {"type": "number", "minimum": 0},
+        "sourceEnd": {"type": "number", "exclusiveMinimum": 0},
+        "outputStart": {"type": "number", "minimum": 0},
+        "outputEnd": {"type": "number", "exclusiveMinimum": 0}
+      }
+    },
+    "captionWord": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "text", "start", "end", "emphasis", "confidence"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"},
+        "text": {"type": "string", "minLength": 1, "maxLength": 200},
+        "scriptText": {"type": "string", "minLength": 1, "maxLength": 200},
+        "start": {"type": "number", "minimum": 0},
+        "end": {"type": "number", "exclusiveMinimum": 0},
+        "emphasis": {"type": "boolean"},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    },
+    "captions": {
+      "type": "object", "additionalProperties": false,
+      "required": ["preset", "language", "safeZone", "maxLines", "wordsPerPage", "words"],
+      "properties": {
+        "preset": {"enum": ["roman-word-highlight", "clean-two-line", "hook", "definition", "question", "urdu-script"]},
+        "language": {"enum": ["roman-urdu", "urdu-script", "english"]},
+        "safeZone": {"enum": ["shorts-default", "reels-default", "tiktok-default", "youtube-longform", "custom"]},
+        "maxLines": {"type": "integer", "minimum": 1, "maximum": 3},
+        "wordsPerPage": {
+          "type": "object", "additionalProperties": false, "required": ["min", "max"],
+          "properties": {
+            "min": {"type": "integer", "minimum": 1, "maximum": 10},
+            "max": {"type": "integer", "minimum": 1, "maximum": 12}
+          }
+        },
+        "words": {"type": "array", "items": {"$ref": "#/$defs/captionWord"}}
+      }
+    },
+    "camera": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mode", "scaleStart", "scaleEnd", "focus"],
+      "properties": {
+        "mode": {"enum": ["static", "punch-in", "slow-zoom", "reframe-left", "reframe-right", "return-wide", "face-follow"]},
+        "scaleStart": {"type": "number", "minimum": 0.75, "maximum": 1.5},
+        "scaleEnd": {"type": "number", "minimum": 0.75, "maximum": 1.5},
+        "focus": {"enum": ["center", "face", "left", "right", "custom"]}
+      }
+    },
+    "broll": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mode", "assetId", "effect", "fit"],
+      "properties": {
+        "mode": {"enum": ["none", "overlay", "fullscreen", "split-screen", "picture-in-picture"]},
+        "assetId": {"type": ["string", "null"]},
+        "effect": {"enum": ["static", "kenburns-in", "kenburns-out", "slow-pan-left", "slow-pan-right"]},
+        "fit": {"enum": ["cover", "contain"]}
+      }
+    },
+    "propsValue": {
+      "oneOf": [
+        {"type": "string", "maxLength": 500},
+        {"type": "number"},
+        {"type": "boolean"},
+        {"type": "array", "maxItems": 20, "items": {"type": "string", "maxLength": 200}}
+      ]
+    },
+    "graphicBase": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "component", "startOffset", "endOffset", "props"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"},
+        "component": {"type": "string"},
+        "startOffset": {"type": "number", "minimum": 0},
+        "endOffset": {"type": "number", "exclusiveMinimum": 0},
+        "props": {"type": "object"}
+      }
+    },
+    "graphic": {
+      "allOf": [
+        {"$ref": "#/$defs/graphicBase"},
+        {"oneOf": [
+          {"$ref": "#/$defs/hookTitle"},
+          {"$ref": "#/$defs/definitionCard"},
+          {"$ref": "#/$defs/lowerThird"},
+          {"$ref": "#/$defs/endCallToAction"},
+          {"$ref": "#/$defs/stepCard"},
+          {"$ref": "#/$defs/comparisonCard"},
+          {"$ref": "#/$defs/toolLogoRow"},
+          {"$ref": "#/$defs/browserWindow"},
+          {"$ref": "#/$defs/mobileScreenFrame"},
+          {"$ref": "#/$defs/quoteCard"},
+          {"$ref": "#/$defs/statisticCard"},
+          {"$ref": "#/$defs/warningCard"},
+          {"$ref": "#/$defs/questionCard"},
+          {"$ref": "#/$defs/timelineGraphic"},
+          {"$ref": "#/$defs/featureList"},
+          {"$ref": "#/$defs/progressIndicator"},
+          {"$ref": "#/$defs/pictureInPicture"},
+          {"$ref": "#/$defs/fullscreenBroll"},
+          {"$ref": "#/$defs/splitScreen"}
+        ]}
+      ]
+    },
+    "stringProp": {"type": "string", "minLength": 1, "maxLength": 500},
+    "stringList": {"type": "array", "maxItems": 20, "items": {"type": "string", "maxLength": 200}},
+    "hookTitle": {"properties": {"component": {"const": "HookTitle"}, "props": {"type": "object", "additionalProperties": false, "required": ["title"], "properties": {"title": {"$ref": "#/$defs/stringProp"}, "subtitle": {"$ref": "#/$defs/stringProp"}}}}},
+    "definitionCard": {"properties": {"component": {"const": "DefinitionCard"}, "props": {"type": "object", "additionalProperties": false, "required": ["term", "definition"], "properties": {"term": {"$ref": "#/$defs/stringProp"}, "definition": {"$ref": "#/$defs/stringProp"}}}}},
+    "lowerThird": {"properties": {"component": {"const": "LowerThird"}, "props": {"type": "object", "additionalProperties": false, "required": ["name"], "properties": {"name": {"$ref": "#/$defs/stringProp"}, "role": {"$ref": "#/$defs/stringProp"}}}}},
+    "endCallToAction": {"properties": {"component": {"const": "EndCallToAction"}, "props": {"type": "object", "additionalProperties": false, "required": ["text"], "properties": {"text": {"$ref": "#/$defs/stringProp"}}}}},
+    "stepCard": {"properties": {"component": {"const": "StepCard"}, "props": {"type": "object", "additionalProperties": false, "required": ["step", "title"], "properties": {"step": {"type": "number"}, "title": {"$ref": "#/$defs/stringProp"}, "body": {"$ref": "#/$defs/stringProp"}}}}},
+    "comparisonCard": {"properties": {"component": {"const": "ComparisonCard"}, "props": {"type": "object", "additionalProperties": false, "required": ["leftTitle", "rightTitle", "leftItems", "rightItems"], "properties": {"leftTitle": {"$ref": "#/$defs/stringProp"}, "rightTitle": {"$ref": "#/$defs/stringProp"}, "leftItems": {"$ref": "#/$defs/stringList"}, "rightItems": {"$ref": "#/$defs/stringList"}}}}},
+    "toolLogoRow": {"properties": {"component": {"const": "ToolLogoRow"}, "props": {"type": "object", "additionalProperties": false, "required": ["tools"], "properties": {"tools": {"$ref": "#/$defs/stringList"}}}}},
+    "browserWindow": {"properties": {"component": {"const": "BrowserWindow"}, "props": {"type": "object", "additionalProperties": false, "required": ["title"], "properties": {"title": {"$ref": "#/$defs/stringProp"}, "address": {"$ref": "#/$defs/stringProp"}, "steps": {"$ref": "#/$defs/stringList"}}}}},
+    "mobileScreenFrame": {"properties": {"component": {"const": "MobileScreenFrame"}, "props": {"type": "object", "additionalProperties": false, "required": ["title"], "properties": {"title": {"$ref": "#/$defs/stringProp"}, "steps": {"$ref": "#/$defs/stringList"}}}}},
+    "quoteCard": {"properties": {"component": {"const": "QuoteCard"}, "props": {"type": "object", "additionalProperties": false, "required": ["quote"], "properties": {"quote": {"$ref": "#/$defs/stringProp"}, "attribution": {"$ref": "#/$defs/stringProp"}}}}},
+    "statisticCard": {"properties": {"component": {"const": "StatisticCard"}, "props": {"type": "object", "additionalProperties": false, "required": ["value", "label"], "properties": {"value": {"$ref": "#/$defs/stringProp"}, "label": {"$ref": "#/$defs/stringProp"}, "source": {"$ref": "#/$defs/stringProp"}}}}},
+    "warningCard": {"properties": {"component": {"const": "WarningCard"}, "props": {"type": "object", "additionalProperties": false, "required": ["title"], "properties": {"title": {"$ref": "#/$defs/stringProp"}, "body": {"$ref": "#/$defs/stringProp"}}}}},
+    "questionCard": {"properties": {"component": {"const": "QuestionCard"}, "props": {"type": "object", "additionalProperties": false, "required": ["question"], "properties": {"question": {"$ref": "#/$defs/stringProp"}}}}},
+    "timelineGraphic": {"properties": {"component": {"const": "TimelineGraphic"}, "props": {"type": "object", "additionalProperties": false, "required": ["items"], "properties": {"items": {"$ref": "#/$defs/stringList"}}}}},
+    "featureList": {"properties": {"component": {"const": "FeatureList"}, "props": {"type": "object", "additionalProperties": false, "required": ["title", "items"], "properties": {"title": {"$ref": "#/$defs/stringProp"}, "items": {"$ref": "#/$defs/stringList"}}}}},
+    "progressIndicator": {"properties": {"component": {"const": "ProgressIndicator"}, "props": {"type": "object", "additionalProperties": false, "required": ["label", "value"], "properties": {"label": {"$ref": "#/$defs/stringProp"}, "value": {"type": "number", "minimum": 0, "maximum": 100}}}}},
+    "pictureInPicture": {"properties": {"component": {"const": "PictureInPicture"}, "props": {"type": "object", "additionalProperties": false, "properties": {"label": {"$ref": "#/$defs/stringProp"}}}}},
+    "fullscreenBroll": {"properties": {"component": {"const": "FullscreenBroll"}, "props": {"type": "object", "additionalProperties": false, "properties": {"label": {"$ref": "#/$defs/stringProp"}}}}},
+    "splitScreen": {"properties": {"component": {"const": "SplitScreen"}, "props": {"type": "object", "additionalProperties": false, "properties": {"leftLabel": {"$ref": "#/$defs/stringProp"}, "rightLabel": {"$ref": "#/$defs/stringProp"}}}}},
+    "sfx": {
+      "type": "object", "additionalProperties": false,
+      "required": ["assetId", "offset", "gainDb"],
+      "properties": {
+        "assetId": {"type": "string"},
+        "offset": {"type": "number", "minimum": 0},
+        "gainDb": {"type": "number", "minimum": -60, "maximum": 6}
+      }
+    },
+    "transition": {
+      "type": "object", "additionalProperties": false,
+      "required": ["type", "durationFrames"],
+      "properties": {
+        "type": {"enum": ["clean-cut", "crossfade", "directional-slide", "blur", "zoom", "mask-reveal"]},
+        "durationFrames": {"type": "integer", "minimum": 0, "maximum": 45}
+      }
+    },
+    "screenPoint": {"type": "object", "additionalProperties": false, "required": ["x", "y"], "properties": {"x": {"type": "number", "minimum": 0, "maximum": 1}, "y": {"type": "number", "minimum": 0, "maximum": 1}}},
+    "screenTreatment": {
+      "type": "object", "additionalProperties": false,
+      "required": ["frame", "cursor", "clicks", "zoom", "labels", "sensitiveRegions"],
+      "properties": {
+        "frame": {"enum": ["browser", "phone"]},
+        "cursor": {"anyOf": [{"$ref": "#/$defs/screenPoint"}, {"type": "null"}]},
+        "clicks": {"type": "array", "maxItems": 20, "items": {"type": "object", "additionalProperties": false, "required": ["offset", "x", "y"], "properties": {"offset": {"type": "number", "minimum": 0}, "x": {"type": "number", "minimum": 0, "maximum": 1}, "y": {"type": "number", "minimum": 0, "maximum": 1}}}},
+        "zoom": {"anyOf": [{"type": "object", "additionalProperties": false, "required": ["startOffset", "endOffset", "x", "y", "scale"], "properties": {"startOffset": {"type": "number", "minimum": 0}, "endOffset": {"type": "number", "exclusiveMinimum": 0}, "x": {"type": "number", "minimum": 0, "maximum": 1}, "y": {"type": "number", "minimum": 0, "maximum": 1}, "scale": {"type": "number", "minimum": 1, "maximum": 1.5}}}, {"type": "null"}]},
+        "labels": {"type": "array", "maxItems": 12, "items": {"type": "object", "additionalProperties": false, "required": ["offset", "text", "x", "y"], "properties": {"offset": {"type": "number", "minimum": 0}, "text": {"type": "string", "minLength": 1, "maxLength": 80}, "x": {"type": "number", "minimum": 0, "maximum": 1}, "y": {"type": "number", "minimum": 0, "maximum": 1}}}},
+        "sensitiveRegions": {"type": "array", "maxItems": 12, "items": {"type": "object", "additionalProperties": false, "required": ["x", "y", "width", "height", "blur"], "properties": {"x": {"type": "number", "minimum": 0, "maximum": 1}, "y": {"type": "number", "minimum": 0, "maximum": 1}, "width": {"type": "number", "exclusiveMinimum": 0, "maximum": 1}, "height": {"type": "number", "exclusiveMinimum": 0, "maximum": 1}, "blur": {"type": "number", "minimum": 4, "maximum": 24}}}}
+      }
+    },
+    "scene": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "start", "end", "layout", "camera", "broll", "graphics", "sfx", "transitionOut", "screenTreatment"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^scene_[0-9]{6}$"},
+        "start": {"type": "number", "minimum": 0},
+        "end": {"type": "number", "exclusiveMinimum": 0},
+        "layout": {"enum": ["speaker-fullscreen", "speaker-with-title", "speaker-with-broll", "fullscreen-broll", "split-screen", "browser-demo", "mobile-demo", "graphic-fullscreen", "picture-in-picture"]},
+        "camera": {"$ref": "#/$defs/camera"},
+        "broll": {"$ref": "#/$defs/broll"},
+        "graphics": {"type": "array", "items": {"$ref": "#/$defs/graphic"}},
+        "sfx": {"type": "array", "items": {"$ref": "#/$defs/sfx"}},
+        "transitionOut": {"$ref": "#/$defs/transition"},
+        "screenTreatment": {"anyOf": [{"$ref": "#/$defs/screenTreatment"}, {"type": "null"}]}
+      }
+    },
+    "font": {
+      "type": "object", "additionalProperties": false,
+      "required": ["family", "path", "sha256", "license", "fallback"],
+      "properties": {
+        "family": {"const": "Noto Naskh Arabic"},
+        "path": {"anyOf": [{"const": "fonts/NotoNaskhArabic-Variable.ttf"}, {"type": "null"}]},
+        "sha256": {"anyOf": [{"const": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f"}, {"type": "null"}]},
+        "license": {"anyOf": [{"const": "OFL-1.1"}, {"type": "null"}]},
+        "fallback": {"const": "Arial, sans-serif"}
+      }
+    },
+    "design": {
+      "type": "object", "additionalProperties": false,
+      "required": ["stylePreset", "colorPreset", "colorIntensity", "font"],
+      "properties": {
+        "stylePreset": {"enum": ["modern-ai", "minimal-professional", "documentary", "custom"]},
+        "colorPreset": {"enum": ["off", "natural-clean", "modern-ai", "soft-professional", "high-contrast-social", "cinematic-warm", "cinematic-cool", "documentary", "low-light-recovery", "custom"]},
+        "colorIntensity": {"type": "number", "minimum": 0, "maximum": 0.5},
+        "font": {"$ref": "#/$defs/font"}
+      }
+    }
+  }
+}

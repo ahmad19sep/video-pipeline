@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cutmachine.local/schemas/asset-index-v1.schema.json",
+  "title": "CutMachine Local Asset Index v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "generatedAt", "assets"],
+  "properties": {
+    "version": {"const": 1}, "generatedAt": {"type": "string", "format": "date-time"},
+    "assets": {"type": "array", "items": {"$ref": "#/$defs/asset"}}
+  },
+  "$defs": {
+    "safeRelativePath": {"type": "string", "minLength": 1, "allOf": [{"not": {"pattern": "(^[A-Za-z]:)|(^/)|(^\\\\)|(^~)"}}, {"not": {"pattern": "(^|[\\\\/])\\.\\.([\\\\/]|$)"}}]},
+    "asset": {"type": "object", "additionalProperties": false, "required": ["id", "path", "type", "sha256", "tags", "license", "creator", "attributionRequired", "colorSpace", "duration", "width", "height", "orientation", "usageCount", "previewPath"], "properties": {
+      "id": {"type": "string", "pattern": "^local_[a-f0-9]{16}$"}, "path": {"$ref": "#/$defs/safeRelativePath"}, "type": {"enum": ["video", "image", "audio", "lut", "font"]}, "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+      "tags": {"type": "array", "maxItems": 50, "items": {"type": "string", "minLength": 1, "maxLength": 60}}, "license": {"type": "string", "minLength": 1, "maxLength": 120}, "creator": {"type": ["string", "null"], "maxLength": 160}, "attributionRequired": {"type": "boolean"}, "colorSpace": {"type": ["string", "null"], "maxLength": 60},
+      "duration": {"type": ["number", "null"], "exclusiveMinimum": 0}, "width": {"type": ["integer", "null"], "minimum": 1}, "height": {"type": ["integer", "null"], "minimum": 1}, "orientation": {"enum": ["portrait", "landscape", "square", "audio", "unknown"]}, "usageCount": {"type": "integer", "minimum": 0}, "previewPath": {"anyOf": [{"$ref": "#/$defs/safeRelativePath"}, {"type": "null"}]}
+    }}
+  }
+}

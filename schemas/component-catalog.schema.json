@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cutmachine.local/schemas/component-catalog-v2.schema.json",
+  "title": "CutMachine Component Catalog v2",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "components"],
+  "properties": {
+    "version": {"const": 2},
+    "components": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["name", "category", "implementationPhase", "allowedProps", "requiredProps"],
+        "properties": {
+          "name": {"type": "string", "pattern": "^[A-Z][A-Za-z0-9]+$"},
+          "category": {"enum": ["title", "information", "cta", "data", "layout", "screen"]},
+          "implementationPhase": {"enum": [6, 10]},
+          "allowedProps": {"type": "object", "additionalProperties": {"enum": ["string", "number", "boolean", "string-array"]}},
+          "requiredProps": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+        }
+      }
+    }
+  }
+}

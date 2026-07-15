@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cutmachine.local/schemas/color-analysis-v1.schema.json",
+  "title": "CutMachine Conservative Color Analysis v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "projectId", "createdAt", "sampleCount", "metrics", "adjustments", "lut"],
+  "properties": {
+    "version": {"const": 1}, "projectId": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"}, "createdAt": {"type": "string", "format": "date-time"}, "sampleCount": {"type": "integer", "minimum": 1, "maximum": 100},
+    "metrics": {"type": "object", "additionalProperties": false, "required": ["lumaAverage", "lumaLow", "lumaHigh", "chromaU", "chromaV", "saturationAverage", "clippedShadows", "clippedHighlights"], "properties": {"lumaAverage": {"type": "number", "minimum": 0, "maximum": 255}, "lumaLow": {"type": "number", "minimum": 0, "maximum": 255}, "lumaHigh": {"type": "number", "minimum": 0, "maximum": 255}, "chromaU": {"type": "number", "minimum": 0, "maximum": 255}, "chromaV": {"type": "number", "minimum": 0, "maximum": 255}, "saturationAverage": {"type": "number", "minimum": 0, "maximum": 255}, "clippedShadows": {"type": "boolean"}, "clippedHighlights": {"type": "boolean"}}},
+    "adjustments": {"type": "object", "additionalProperties": false, "required": ["enabled", "reason", "brightness", "contrast", "saturation", "temperature", "sharpen"], "properties": {"enabled": {"type": "boolean"}, "reason": {"type": "string", "minLength": 1, "maxLength": 300}, "brightness": {"type": "number", "minimum": -0.1, "maximum": 0.1}, "contrast": {"type": "number", "minimum": 0.9, "maximum": 1.1}, "saturation": {"type": "number", "minimum": 0.9, "maximum": 1.1}, "temperature": {"type": "number", "minimum": -0.08, "maximum": 0.08}, "sharpen": {"type": "number", "minimum": 0, "maximum": 0.5}}},
+    "lut": {"type": "object", "additionalProperties": false, "required": ["enabled", "path", "sha256", "license", "colorSpace", "intensity", "reason"], "properties": {"enabled": {"type": "boolean"}, "path": {"anyOf": [{"$ref": "#/$defs/safeRelativePath"}, {"type": "null"}]}, "sha256": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"}, "license": {"type": ["string", "null"]}, "colorSpace": {"type": ["string", "null"]}, "intensity": {"type": "number", "minimum": 0, "maximum": 0.5}, "reason": {"type": "string", "minLength": 1, "maxLength": 300}}}
+  },
+  "$defs": {"safeRelativePath": {"type": "string", "minLength": 1, "allOf": [{"not": {"pattern": "(^[A-Za-z]:)|(^/)|(^\\\\)|(^~)"}}, {"not": {"pattern": "(^|[\\\\/])\\.\\.([\\\\/]|$)"}}]}}
+}

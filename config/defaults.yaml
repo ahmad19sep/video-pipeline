@@ -1,0 +1,89 @@
+project:
+  workspace_root: workspace
+  output_root: output
+  assets_root: assets-library
+  minimum_free_disk_gb: 5
+transcription:
+  language: ur
+  word_timestamps: true
+  vad: true
+  preset: balanced
+  beam_size: 5
+  fallback_model: tiny
+  models:
+    fast: tiny
+    balanced: small
+    energetic: small
+    cinematic: medium
+normalization:
+  glossary_path: config/technical-glossary.json
+  lexicon_path: config/roman-urdu-lexicon.json
+  low_confidence_threshold: 0.7
+  batch_size: 40
+  refinement:
+    enabled: false
+    endpoint: null
+    api_key_env: null
+    timeout_seconds: 20
+    retries: 2
+ingest:
+  proxy_max_dimension: 1280
+  proxy_crf: 26
+  contact_sheet_columns: 4
+  contact_sheet_rows: 3
+  representative_frames: 3
+silence:
+  threshold_db: -35
+  minimum_seconds: 0.55
+  auto_remove_seconds: 1.35
+  padding_before: 0.13
+  padding_after: 0.20
+repetition:
+  similarity_threshold: 0.85
+  nearby_seconds: 12.0
+captions:
+  language: roman-urdu
+  preset: roman-word-highlight
+  max_lines: 2
+  min_words_per_page: 2
+  max_words_per_page: 5
+render:
+  fps: 30
+  draft_width: 540
+  draft_height: 960
+  draft_crf: 28
+  concurrency: 1
+  timeout_seconds: 900
+  final_width: 1080
+  final_height: 1920
+network:
+  enabled: true
+  cache_days: 30
+assets:
+  max_candidates: 8
+  max_download_mb: 100
+  provider_timeout_seconds: 20
+  minimum_score: 0.35
+  pexels:
+    enabled: false
+    endpoint: https://api.pexels.com/v1/videos/search
+    api_key_env: PEXELS_API_KEY
+technical:
+  enabled: true
+  sample_frames: 5
+  face_confidence: 0.6
+  face_smoothing: 0.25
+  max_digital_zoom: 1.2
+  headroom: 0.12
+  color_enabled: true
+  sharpen: 0.15
+  crf: 24
+  timeout_seconds: 900
+  lut:
+    enabled: false
+    path: null
+    intensity: 0.35
+    color_space: null
+quality:
+  target_lufs: -14
+  true_peak_db: -1

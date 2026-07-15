@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cutmachine.local/schemas/preprocess-record-v2.schema.json",
+  "title": "CutMachine Phase 8 Preprocess Record v2",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "projectId", "createdAt", "strategy", "videoSource", "technicalVideo", "timelinePath", "editPlanPath", "assetManifestPath", "technicalFinishPath"],
+  "properties": {
+    "version": {"const": 2}, "projectId": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"}, "createdAt": {"type": "string", "format": "date-time"}, "strategy": {"const": "conservative-technical-finishing"}, "videoSource": {"$ref": "#/$defs/safeRelativePath"}, "technicalVideo": {"$ref": "#/$defs/safeRelativePath"}, "timelinePath": {"$ref": "#/$defs/safeRelativePath"}, "editPlanPath": {"$ref": "#/$defs/safeRelativePath"}, "assetManifestPath": {"$ref": "#/$defs/safeRelativePath"}, "technicalFinishPath": {"$ref": "#/$defs/safeRelativePath"}
+  },
+  "$defs": {"safeRelativePath": {"type": "string", "minLength": 1, "allOf": [{"not": {"pattern": "(^[A-Za-z]:)|(^/)|(^\\\\)|(^~)"}}, {"not": {"pattern": "(^|[\\\\/])\\.\\.([\\\\/]|$)"}}]}}
+}

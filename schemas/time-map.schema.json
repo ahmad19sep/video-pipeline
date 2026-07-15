@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cutmachine.local/schemas/time-map-v1.schema.json",
+  "title": "CutMachine Source to Output Time Map v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "projectId", "sourceDuration", "outputDuration", "mappings"],
+  "properties": {
+    "version": {"const": 1}, "projectId": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"},
+    "sourceDuration": {"type": "number", "exclusiveMinimum": 0}, "outputDuration": {"type": "number", "exclusiveMinimum": 0},
+    "mappings": {"type": "array", "minItems": 1, "items": {
+      "type": "object", "additionalProperties": false, "required": ["timelineSegmentId", "sourceStart", "sourceEnd", "outputStart", "outputEnd"],
+      "properties": {"timelineSegmentId": {"type": "string", "pattern": "^keep_[0-9]{6}$"}, "sourceStart": {"type": "number", "minimum": 0}, "sourceEnd": {"type": "number", "exclusiveMinimum": 0}, "outputStart": {"type": "number", "minimum": 0}, "outputEnd": {"type": "number", "exclusiveMinimum": 0}}
+    }}
+  }
+}

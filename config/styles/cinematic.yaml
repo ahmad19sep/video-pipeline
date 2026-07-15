@@ -1,0 +1,13 @@
+style:
+  name: cinematic
+  visual_change_target_seconds: 7.5
+  transition_density: low
+  caption_preset: clean-two-line
+  effect_budgets:
+    transitions_per_minute: 3
+    camera_moves_per_minute: 4
+    fullscreen_broll_ratio: 0.4
+    animated_text_per_minute: 6
+    impact_sfx_per_minute: 3
+quality:
+  target_lufs: -16

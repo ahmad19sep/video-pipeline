@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cutmachine.local/schemas/qc-report-v1.schema.json",
+  "title": "CutMachine Quality Control Report v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "projectId", "createdAt", "status", "recommendation", "artifacts", "duration", "audio", "counts", "checks", "findings"],
+  "properties": {
+    "version": {"const": 1}, "projectId": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"}, "createdAt": {"type": "string", "format": "date-time"},
+    "status": {"enum": ["passed", "blocked"]}, "recommendation": {"enum": ["approve-or-revise", "fix-blocking-findings"]},
+    "artifacts": {"type": "object", "additionalProperties": false, "required": ["draftPath", "draftSha256", "beforeFramePath", "beforeFrameSha256", "afterFramePath", "afterFrameSha256"], "properties": {
+      "draftPath": {"$ref": "#/$defs/safeRelativePath"}, "draftSha256": {"$ref": "#/$defs/sha256"}, "beforeFramePath": {"$ref": "#/$defs/safeRelativePath"}, "beforeFrameSha256": {"$ref": "#/$defs/sha256"}, "afterFramePath": {"$ref": "#/$defs/safeRelativePath"}, "afterFrameSha256": {"$ref": "#/$defs/sha256"}
+    }},
+    "duration": {"type": "object", "additionalProperties": false, "required": ["expected", "actual", "tolerance", "delta"], "properties": {
+      "expected": {"type": "number", "exclusiveMinimum": 0}, "actual": {"type": "number", "exclusiveMinimum": 0}, "tolerance": {"type": "number", "minimum": 0}, "delta": {"type": "number", "minimum": 0}
+    }},
+    "audio": {"type": "object", "additionalProperties": false, "required": ["speechPresent", "targetLufs", "actualLufs", "targetTruePeakDb", "actualTruePeakDb", "longestSilenceSeconds", "musicDuckingEnabled"], "properties": {
+      "speechPresent": {"type": "boolean"}, "targetLufs": {"type": "number"}, "actualLufs": {"type": "number"}, "targetTruePeakDb": {"type": "number"}, "actualTruePeakDb": {"type": "number"}, "longestSilenceSeconds": {"type": "number", "minimum": 0}, "musicDuckingEnabled": {"type": "boolean"}
+    }},
+    "counts": {"type": "object", "additionalProperties": false, "required": ["checks", "passed", "warnings", "blocking"], "properties": {
+      "checks": {"type": "integer", "minimum": 1}, "passed": {"type": "integer", "minimum": 0}, "warnings": {"type": "integer", "minimum": 0}, "blocking": {"type": "integer", "minimum": 0}
+    }},
+    "checks": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/check"}},
+    "findings": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/finding"}}
+  },
+  "$defs": {
+    "safeRelativePath": {"type": "string", "minLength": 1, "allOf": [{"not": {"pattern": "(^[A-Za-z]:)|(^/)|(^\\\\)|(^~)"}}, {"not": {"pattern": "(^|[\\\\/])\\.\\.([\\\\/]|$)"}}]},
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "checkId": {"enum": ["plan-valid", "timeline-valid", "captions-monotonic", "captions-safe-zone", "draft-decodable", "streams-present", "duration-valid", "assets-valid", "voice-present", "loudness-valid", "true-peak-valid", "silence-valid", "music-balance", "sfx-balance", "review-evidence"]},
+    "check": {"type": "object", "additionalProperties": false, "required": ["id", "status", "message"], "properties": {"id": {"$ref": "#/$defs/checkId"}, "status": {"enum": ["pass", "warning", "fail"]}, "message": {"type": "string", "minLength": 1, "maxLength": 500}}},
+    "finding": {"type": "object", "additionalProperties": false, "required": ["id", "checkId", "severity", "message", "start", "end", "recommendation"], "properties": {
+      "id": {"type": "string", "pattern": "^qc_[0-9]{6}$"}, "checkId": {"$ref": "#/$defs/checkId"}, "severity": {"enum": ["error", "warning", "info"]}, "message": {"type": "string", "minLength": 1, "maxLength": 500}, "start": {"type": ["number", "null"], "minimum": 0}, "end": {"type": ["number", "null"], "minimum": 0}, "recommendation": {"type": "string", "minLength": 1, "maxLength": 500}
+    }}
+  }
+}
