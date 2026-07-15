@@ -1,5 +1,6 @@
 import {
   AbsoluteFill,
+  Easing,
   Sequence,
   interpolate,
   spring,
@@ -7,7 +8,7 @@ import {
   useVideoConfig,
 } from "remotion";
 import type { CSSProperties, ReactNode } from "react";
-import { TOKENS, panelStyle, primaryFont } from "./design-tokens";
+import { TOKENS, displayFont, panelStyle, primaryFont } from "./design-tokens";
 import type { Graphic, RenderInput, Scene } from "./types";
 
 const frameAt = (seconds: number, fps: number) => Math.round(seconds * fps);
@@ -140,36 +141,274 @@ const BrowserChrome: React.FC<{
   </div>
 );
 
-const MobileChrome: React.FC<{ children: ReactNode; title: string }> = ({
-  children,
+const MobileChrome: React.FC<{ items: string[]; title: string }> = ({
+  items,
   title,
-}) => (
-  <div
-    style={{
-      background: "#f8fafc",
-      border: "10px solid #111827",
-      borderRadius: 44,
-      color: "#0f172a",
-      maxHeight: "100%",
-      padding: "1.2em 1em",
-      width: "44%",
-    }}
-  >
+}) => {
+  const frame = useCurrentFrame();
+  const typed = title.slice(0, Math.max(0, Math.floor(frame / 1.5)));
+  return (
     <div
       style={{
-        background: "#111827",
-        borderRadius: TOKENS.radius.pill,
-        height: 8,
-        margin: "0 auto 1.1em",
-        width: "28%",
+        background: "#17191f",
+        border: "9px solid #090a0d",
+        borderRadius: 48,
+        boxShadow: "0 0 0 2px #64748b, 0 28px 70px rgba(0,0,0,0.55)",
+        color: "#f8fafc",
+        maxHeight: "100%",
+        minHeight: "34em",
+        overflow: "hidden",
+        padding: "0.8em 0.72em 1em",
+        width: "82%",
       }}
-    />
-    <Stack>
-      <Title>{title}</Title>
-      {children}
+    >
+      <div
+        style={{
+          background: "#050608",
+          borderRadius: TOKENS.radius.pill,
+          height: 16,
+          margin: "0 auto 0.9em",
+          width: "34%",
+        }}
+      />
+      <div
+        style={{
+          alignItems: "center",
+          background: "#252832",
+          border: "2px solid #3b4150",
+          borderRadius: TOKENS.radius.pill,
+          display: "flex",
+          fontSize: "1.05em",
+          fontWeight: 750,
+          gap: 10,
+          minHeight: "2.8em",
+          padding: "0.58em 0.8em",
+        }}
+      >
+        <span style={{ color: TOKENS.color.muted }}>⌕</span>
+        <span style={{ flex: 1 }}>{typed}</span>
+        <span
+          style={{
+            background: TOKENS.color.accent,
+            borderRadius: "50%",
+            color: "#07101f",
+            display: "grid",
+            height: 30,
+            placeItems: "center",
+            width: 30,
+          }}
+        >
+          →
+        </span>
+      </div>
+      <Stack style={{ gap: 4, marginTop: "0.75em" }}>
+        {items.slice(0, 6).map((item, index) => {
+          const reveal = interpolate(
+            frame,
+            [8 + index * 3, 14 + index * 3],
+            [0, 1],
+            {
+              easing: Easing.bezier(0.16, 1, 0.3, 1),
+              extrapolateLeft: "clamp",
+              extrapolateRight: "clamp",
+            },
+          );
+          return (
+            <div
+              key={`${item}-${index}`}
+              style={{
+                alignItems: "center",
+                borderBottom: "1px solid #303540",
+                color: "#e5e7eb",
+                display: "flex",
+                fontSize: "0.88em",
+                gap: 10,
+                opacity: reveal,
+                padding: "0.64em 0.25em",
+                translate: `${interpolate(reveal, [0, 1], [16, 0])}px 0`,
+              }}
+            >
+              <span style={{ color: TOKENS.color.muted }}>⌕</span>
+              <span>{item}</span>
+            </div>
+          );
+        })}
+      </Stack>
+    </div>
+  );
+};
+
+const KineticHeadlineContent: React.FC<{
+  accent?: string;
+  eyebrow?: string;
+  headline: string;
+}> = ({ accent, eyebrow, headline }) => {
+  const frame = useCurrentFrame();
+  const words = headline.split(/\s+/).filter(Boolean).slice(0, 12);
+  const effectiveAccent = (
+    accent ||
+    words[words.length - 1] ||
+    ""
+  ).toLocaleLowerCase();
+  return (
+    <Stack style={{ alignItems: "center", gap: TOKENS.spacing.md }}>
+      {eyebrow ? (
+        <div
+          style={{
+            background: TOKENS.color.socialYellow,
+            borderRadius: TOKENS.radius.pill,
+            color: "#080808",
+            fontSize: "0.92em",
+            fontWeight: 950,
+            letterSpacing: "0.08em",
+            padding: "0.35em 0.72em",
+            textTransform: "uppercase",
+          }}
+        >
+          {eyebrow}
+        </div>
+      ) : null}
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "0.02em 0.3em",
+          justifyContent: "center",
+          maxWidth: "96%",
+          textAlign: "center",
+        }}
+      >
+        {words.map((word, index) => {
+          const reveal = interpolate(
+            frame,
+            [index * 3, index * 3 + 7],
+            [0, 1],
+            {
+              easing: Easing.bezier(0.34, 1.35, 0.64, 1),
+              extrapolateLeft: "clamp",
+              extrapolateRight: "clamp",
+            },
+          );
+          const normalizedWord = word
+            .replace(/[^\p{L}\p{N}]/gu, "")
+            .toLocaleLowerCase();
+          return (
+            <span
+              key={`${word}-${index}`}
+              style={{
+                color:
+                  normalizedWord === effectiveAccent
+                    ? TOKENS.color.socialYellow
+                    : TOKENS.color.ink,
+                display: "inline-block",
+                filter: `blur(${interpolate(reveal, [0, 1], [7, 0])}px)`,
+                fontSize: "3.25em",
+                fontWeight: 950,
+                letterSpacing: "-0.055em",
+                lineHeight: 0.94,
+                marginInline: "0.08em",
+                opacity: reveal,
+                scale: `${interpolate(reveal, [0, 1], [1.24, 1])}`,
+                textShadow: "0 5px 0 #050505, 0 16px 38px rgba(0,0,0,0.7)",
+                textTransform: "uppercase",
+                translate: `0 ${interpolate(reveal, [0, 1], [22, 0])}px`,
+                WebkitTextStroke: "2px #050505",
+              }}
+            >
+              {word}
+            </span>
+          );
+        })}
+      </div>
     </Stack>
-  </div>
-);
+  );
+};
+
+const PriceComparisonGraphic: React.FC<{ graphic: Graphic }> = ({
+  graphic,
+}) => {
+  const frame = useCurrentFrame();
+  const values = [
+    {
+      color: TOKENS.color.socialRed,
+      heading: "LOW",
+      value: stringProp(graphic, "lowValue", "$1"),
+    },
+    {
+      color: TOKENS.color.socialGreen,
+      heading: "HIGH",
+      value: stringProp(graphic, "highValue", "$10K"),
+    },
+  ];
+  return (
+    <Stack
+      style={{ alignItems: "center", gap: TOKENS.spacing.lg, width: "100%" }}
+    >
+      <div style={{ fontSize: "1.35em", fontWeight: 900 }}>
+        {stringProp(graphic, "label", "VALUE")}
+      </div>
+      <div
+        style={{
+          display: "grid",
+          gap: TOKENS.spacing.md,
+          gridTemplateColumns: "1fr 1fr",
+          width: "100%",
+        }}
+      >
+        {values.map((item, index) => {
+          const reveal = interpolate(
+            frame,
+            [index * 5, index * 5 + 8],
+            [0, 1],
+            {
+              easing: Easing.bezier(0.16, 1, 0.3, 1),
+              extrapolateLeft: "clamp",
+              extrapolateRight: "clamp",
+            },
+          );
+          return (
+            <Stack
+              key={item.heading}
+              style={{
+                alignItems: "center",
+                background: `${item.color}18`,
+                border: `4px solid ${item.color}`,
+                borderRadius: TOKENS.radius.large,
+                boxShadow: `0 0 34px ${item.color}40`,
+                opacity: reveal,
+                padding: "1.05em 0.6em",
+                scale: `${interpolate(reveal, [0, 1], [0.82, 1])}`,
+              }}
+            >
+              <div
+                style={{
+                  color: item.color,
+                  fontSize: "0.85em",
+                  fontWeight: 950,
+                  letterSpacing: "0.1em",
+                }}
+              >
+                {item.heading}
+              </div>
+              <div
+                style={{
+                  color: item.color,
+                  fontSize: "3.3em",
+                  fontWeight: 950,
+                  letterSpacing: "-0.05em",
+                  lineHeight: 1,
+                  textShadow: "0 8px 24px rgba(0,0,0,0.5)",
+                }}
+              >
+                {item.value}
+              </div>
+            </Stack>
+          );
+        })}
+      </div>
+    </Stack>
+  );
+};
 
 const Comparison: React.FC<{ graphic: Graphic }> = ({ graphic }) => (
   <div
@@ -293,9 +532,24 @@ const LayoutMarker: React.FC<{
   );
 };
 
-const GraphicContent: React.FC<{ graphic: Graphic }> = ({ graphic }) => {
+const GraphicContent: React.FC<{
+  design: RenderInput["design"];
+  graphic: Graphic;
+}> = ({ design, graphic }) => {
   switch (graphic.component) {
     case "HookTitle":
+      if (design.stylePreset === "viral-social") {
+        return (
+          <KineticHeadlineContent
+            accent={stringProp(graphic, "title")
+              .split(/\s+/)
+              .filter(Boolean)
+              .pop()}
+            eyebrow={stringProp(graphic, "subtitle")}
+            headline={stringProp(graphic, "title", "Untitled")}
+          />
+        );
+      }
       return (
         <Stack style={{ textAlign: "center" }}>
           <Title accent>{stringProp(graphic, "title", "Untitled")}</Title>
@@ -413,9 +667,10 @@ const GraphicContent: React.FC<{ graphic: Graphic }> = ({ graphic }) => {
     case "MobileScreenFrame":
       return (
         <div style={{ display: "flex", justifyContent: "center" }}>
-          <MobileChrome title={stringProp(graphic, "title", "Mobile demo")}>
-            <List items={listProp(graphic, "steps")} ordered />
-          </MobileChrome>
+          <MobileChrome
+            items={listProp(graphic, "steps")}
+            title={stringProp(graphic, "title", "Mobile demo")}
+          />
         </div>
       );
     case "QuoteCard":
@@ -537,6 +792,16 @@ const GraphicContent: React.FC<{ graphic: Graphic }> = ({ graphic }) => {
       return (
         <LayoutMarker label={stringProp(graphic, "leftLabel")} mode="split" />
       );
+    case "KineticHeadline":
+      return (
+        <KineticHeadlineContent
+          accent={stringProp(graphic, "accent")}
+          eyebrow={stringProp(graphic, "eyebrow")}
+          headline={stringProp(graphic, "headline", "Make it clear")}
+        />
+      );
+    case "PriceComparison":
+      return <PriceComparisonGraphic graphic={graphic} />;
     default:
       return <Title>Graphic unavailable</Title>;
   }
@@ -562,7 +827,18 @@ const GraphicCard: React.FC<{
     "PictureInPicture",
     "FullscreenBroll",
     "SplitScreen",
+    "KineticHeadline",
+    "MobileScreenFrame",
+    "PriceComparison",
   ].includes(graphic.component);
+  const viralFocal =
+    design.stylePreset === "viral-social" &&
+    [
+      "HookTitle",
+      "KineticHeadline",
+      "MobileScreenFrame",
+      "PriceComparison",
+    ].includes(graphic.component);
   return (
     <AbsoluteFill
       style={{
@@ -579,8 +855,17 @@ const GraphicCard: React.FC<{
     >
       <div
         style={{
-          ...panelStyle(primaryFont(design)),
+          ...panelStyle(
+            viralFocal ||
+              graphic.component === "KineticHeadline" ||
+              graphic.component === "PriceComparison"
+              ? displayFont(design)
+              : primaryFont(design),
+          ),
           background: screen ? "rgba(7,13,27,0.72)" : TOKENS.color.panel,
+          ...(viralFocal
+            ? { background: "transparent", border: "none", boxShadow: "none" }
+            : {}),
           fontSize: "clamp(15px, 2.6vw, 30px)",
           maxHeight: lowerThird ? "32%" : "78%",
           maxWidth: lowerThird ? "70%" : screen ? "92%" : "86%",
@@ -589,7 +874,7 @@ const GraphicCard: React.FC<{
           width: screen ? "92%" : undefined,
         }}
       >
-        <GraphicContent graphic={graphic} />
+        <GraphicContent design={design} graphic={graphic} />
       </div>
     </AbsoluteFill>
   );

@@ -71,7 +71,7 @@
       "type": "object", "additionalProperties": false,
       "required": ["preset", "language", "safeZone", "maxLines", "wordsPerPage", "words"],
       "properties": {
-        "preset": {"enum": ["roman-word-highlight", "clean-two-line", "hook", "definition", "question", "urdu-script"]},
+        "preset": {"enum": ["roman-word-highlight", "clean-two-line", "hook", "definition", "question", "viral-punch", "boxed-keyword", "urdu-script"]},
         "language": {"enum": ["roman-urdu", "urdu-script", "english"]},
         "safeZone": {"enum": ["shorts-default", "reels-default", "tiktok-default", "youtube-longform", "custom"]},
         "maxLines": {"type": "integer", "minimum": 1, "maximum": 3},
@@ -146,7 +146,9 @@
           {"$ref": "#/$defs/progressIndicator"},
           {"$ref": "#/$defs/pictureInPicture"},
           {"$ref": "#/$defs/fullscreenBroll"},
-          {"$ref": "#/$defs/splitScreen"}
+          {"$ref": "#/$defs/splitScreen"},
+          {"$ref": "#/$defs/kineticHeadline"},
+          {"$ref": "#/$defs/priceComparison"}
         ]}
       ]
     },
@@ -171,6 +173,8 @@
     "pictureInPicture": {"properties": {"component": {"const": "PictureInPicture"}, "props": {"type": "object", "additionalProperties": false, "properties": {"label": {"$ref": "#/$defs/stringProp"}}}}},
     "fullscreenBroll": {"properties": {"component": {"const": "FullscreenBroll"}, "props": {"type": "object", "additionalProperties": false, "properties": {"label": {"$ref": "#/$defs/stringProp"}}}}},
     "splitScreen": {"properties": {"component": {"const": "SplitScreen"}, "props": {"type": "object", "additionalProperties": false, "properties": {"leftLabel": {"$ref": "#/$defs/stringProp"}, "rightLabel": {"$ref": "#/$defs/stringProp"}}}}},
+    "kineticHeadline": {"properties": {"component": {"const": "KineticHeadline"}, "props": {"type": "object", "additionalProperties": false, "required": ["headline"], "properties": {"eyebrow": {"$ref": "#/$defs/stringProp"}, "headline": {"$ref": "#/$defs/stringProp"}, "accent": {"$ref": "#/$defs/stringProp"}}}}},
+    "priceComparison": {"properties": {"component": {"const": "PriceComparison"}, "props": {"type": "object", "additionalProperties": false, "required": ["lowValue", "highValue"], "properties": {"lowValue": {"$ref": "#/$defs/stringProp"}, "highValue": {"$ref": "#/$defs/stringProp"}, "label": {"$ref": "#/$defs/stringProp"}}}}},
     "sfx": {
       "type": "object", "additionalProperties": false,
       "required": ["assetId", "offset", "gainDb"],
@@ -232,7 +236,7 @@
       "type": "object", "additionalProperties": false,
       "required": ["stylePreset", "colorPreset", "colorIntensity", "font"],
       "properties": {
-        "stylePreset": {"enum": ["modern-ai", "minimal-professional", "documentary", "custom"]},
+        "stylePreset": {"enum": ["modern-ai", "minimal-professional", "documentary", "viral-social", "custom"]},
         "colorPreset": {"enum": ["off", "natural-clean", "modern-ai", "soft-professional", "high-contrast-social", "cinematic-warm", "cinematic-cool", "documentary", "low-light-recovery", "custom"]},
         "colorIntensity": {"type": "number", "minimum": 0, "maximum": 0.5},
         "font": {"$ref": "#/$defs/font"}

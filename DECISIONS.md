@@ -167,3 +167,11 @@ After the single human approval, render the authoritative plan at its full plann
 ## 2026-07-16 - ADR-0042: Modern review remains static and read-only
 
 Present the review package as a responsive editor-like local surface with preview, timeline, transcript, asset, color, audio, learning, QC, and action sections. Preserve the Phase 9 security boundary: no scripts, remote resources, arbitrary plan execution, or implicit approval controls.
+
+## 2026-07-16 - ADR-0043: Model observable social-editing principles, not creator identity
+
+Add a post-v2 viral social style pack using original Remotion components derived from observable public patterns: clear premises, reaction-led reframing, clean cuts, sparse high-value labels, word-timed emphasis, phone demonstrations, and compact data graphics. Do not claim knowledge of private After Effects projects or copy handles, branding, promotional wrappers, reference footage, or proprietary assets. Keep every new choice inside typed schemas, local assets, immutable caption timing, safe zones, and existing effect budgets.
+
+## 2026-07-16 - ADR-0044: Treat social typography as timed information hierarchy
+
+Use a heavy local display stack, one yellow emphasis color, black separation, short word-level entrances, and compact boxed-keyword alternatives instead of permanent full-screen decoration. Drive blur, scale, opacity, and movement from Remotion frames only. Keep modern phone and comparison demonstrations as typed local data, and require representative portrait-frame inspection before completing the design phase.

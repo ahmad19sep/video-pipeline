@@ -1,6 +1,6 @@
 # CutMachine
 
-CutMachine is a complete local-first, resumable AI video-editing pipeline for Urdu speech mixed with English technical terms. Python owns orchestration and validation, FFmpeg owns technical media work, and Remotion owns deterministic visual composition. The v2.0 roadmap is complete through final delivery, explicit review learning, and a modern local editor/review surface.
+CutMachine is a complete local-first, resumable AI video-editing pipeline for Urdu speech mixed with English technical terms. Python owns orchestration and validation, FFmpeg owns technical media work, and Remotion owns deterministic visual composition. The roadmap is complete through final delivery, explicit review learning, a modern local editor/review surface, and an optional viral social design pack.
 
 ## Setup
 
@@ -120,7 +120,7 @@ python cutmachine.py request-revision video planning\revision.json --note "Chang
 
 Approval automatically renders and verifies the full-resolution master at `output/<project-slug>.mp4`, then marks the project complete. Revision JSON must use the existing allowlisted `plan-revision` contract and a safe project-relative path. A revision invalidates `plan_ready` and downstream stages while preserving the source timeline and transcript evidence.
 
-Phase 10 adds the versioned visual design system: six caption presets, typed title/information/data/screen/layout components, bundled Urdu typography, responsive safe zones, bounded camera and transition treatments, and conservative color presets. Unsupported components, props, effects, paths, or executable fields are rejected before rendering.
+Phase 10 adds the versioned visual design system: caption presets, typed title/information/data/screen/layout components, bundled Urdu typography, responsive safe zones, bounded camera and transition treatments, and conservative color presets. Unsupported components, props, effects, paths, or executable fields are rejected before rendering.
 
 Phase 11 adds an explicit, auditable local learning loop and final delivery:
 
@@ -139,6 +139,14 @@ python cutmachine.py request-revision video planning\revision.json --feedback re
 ```
 
 Learning is never inferred from silence. Invalid, stale, duplicated, tampered, absolute, or traversal-based feedback is rejected; corrupt derived profiles fall back to deterministic defaults.
+
+Phase 12 adds an original high-retention portrait style without copying creator branding or relying on After Effects projects:
+
+- `viral-punch` word-synchronized captions and a compact `boxed-keyword` alternative
+- the `viral-social` energetic preset with strong contrast and restrained yellow emphasis
+- typed kinetic headlines and red/green price or value comparisons
+- a modern phone/search demonstration with local validated strings
+- frame-driven entrances only, with existing safe zones and effect budgets preserved
 
 The first transcription run downloads the selected Faster-Whisper model when it is not cached. CUDA is attempted on suitable hardware; failures retry once with the configured CPU int8 fallback and record the reason.
 

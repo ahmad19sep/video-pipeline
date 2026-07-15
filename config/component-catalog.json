@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "components": [
     {"name": "HookTitle", "category": "title", "implementationPhase": 6, "allowedProps": {"title": "string", "subtitle": "string"}, "requiredProps": ["title"]},
     {"name": "DefinitionCard", "category": "information", "implementationPhase": 6, "allowedProps": {"term": "string", "definition": "string"}, "requiredProps": ["term", "definition"]},
@@ -19,6 +19,8 @@
     {"name": "ProgressIndicator", "category": "data", "implementationPhase": 10, "allowedProps": {"label": "string", "value": "number"}, "requiredProps": ["label", "value"]},
     {"name": "PictureInPicture", "category": "layout", "implementationPhase": 10, "allowedProps": {"label": "string"}, "requiredProps": []},
     {"name": "FullscreenBroll", "category": "layout", "implementationPhase": 10, "allowedProps": {"label": "string"}, "requiredProps": []},
-    {"name": "SplitScreen", "category": "layout", "implementationPhase": 10, "allowedProps": {"leftLabel": "string", "rightLabel": "string"}, "requiredProps": []}
+    {"name": "SplitScreen", "category": "layout", "implementationPhase": 10, "allowedProps": {"leftLabel": "string", "rightLabel": "string"}, "requiredProps": []},
+    {"name": "KineticHeadline", "category": "title", "implementationPhase": 12, "allowedProps": {"eyebrow": "string", "headline": "string", "accent": "string"}, "requiredProps": ["headline"]},
+    {"name": "PriceComparison", "category": "data", "implementationPhase": 12, "allowedProps": {"lowValue": "string", "highValue": "string", "label": "string"}, "requiredProps": ["lowValue", "highValue"]}
   ]
 }

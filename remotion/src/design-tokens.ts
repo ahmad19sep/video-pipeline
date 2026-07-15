@@ -12,6 +12,9 @@ export const TOKENS = {
     positive: "#86efac",
     danger: "#fda4af",
     warning: "#fdba74",
+    socialYellow: "#ffd400",
+    socialRed: "#ff3b30",
+    socialGreen: "#39e75f",
   },
   radius: { small: 12, medium: 20, large: 30, pill: 999 },
   shadow: {
@@ -33,6 +36,9 @@ export const primaryFont = (design: RenderInput["design"]) =>
   design.font.path
     ? `"${design.font.family}", ${design.font.fallback}`
     : design.font.fallback;
+
+export const displayFont = (design: RenderInput["design"]) =>
+  `"Arial Black", Impact, ${primaryFont(design)}`;
 
 export const safeInsets = (
   safeZone: RenderInput["captions"]["safeZone"],

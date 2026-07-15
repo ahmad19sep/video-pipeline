@@ -20,6 +20,8 @@ const GRAPHICS = new Set<GraphicComponent>([
   "PictureInPicture",
   "FullscreenBroll",
   "SplitScreen",
+  "KineticHeadline",
+  "PriceComparison",
 ]);
 
 const TRANSITIONS = new Set([
@@ -29,6 +31,25 @@ const TRANSITIONS = new Set([
   "blur",
   "zoom",
   "mask-reveal",
+]);
+
+const CAPTION_PRESETS = new Set([
+  "roman-word-highlight",
+  "clean-two-line",
+  "hook",
+  "definition",
+  "question",
+  "viral-punch",
+  "boxed-keyword",
+  "urdu-script",
+]);
+
+const STYLE_PRESETS = new Set([
+  "modern-ai",
+  "minimal-professional",
+  "documentary",
+  "viral-social",
+  "custom",
 ]);
 
 const finite = (value: number, label: string) => {
@@ -59,6 +80,12 @@ export const validateRenderInput = (input: RenderInput): RenderInput => {
   }
   if (input.design.colorIntensity < 0 || input.design.colorIntensity > 0.5) {
     throw new Error("Color intensity exceeds the conservative design limit");
+  }
+  if (
+    !STYLE_PRESETS.has(input.design.stylePreset) ||
+    !CAPTION_PRESETS.has(input.captions.preset)
+  ) {
+    throw new Error("Unsupported style or caption preset");
   }
   const font = input.design.font;
   if (

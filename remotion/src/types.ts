@@ -4,6 +4,8 @@ export type CaptionPreset =
   | "hook"
   | "definition"
   | "question"
+  | "viral-punch"
+  | "boxed-keyword"
   | "urdu-script";
 
 export type TimelineSegment = {
@@ -43,7 +45,9 @@ export type GraphicComponent =
   | "ProgressIndicator"
   | "PictureInPicture"
   | "FullscreenBroll"
-  | "SplitScreen";
+  | "SplitScreen"
+  | "KineticHeadline"
+  | "PriceComparison";
 
 export type Graphic = {
   id: string;
@@ -172,6 +176,7 @@ export type RenderInput = {
       | "modern-ai"
       | "minimal-professional"
       | "documentary"
+      | "viral-social"
       | "custom";
     colorPreset:
       | "off"

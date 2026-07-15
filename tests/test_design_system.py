@@ -51,6 +51,12 @@ GRAPHIC_PROPS: dict[str, dict[str, Any]] = {
     "PictureInPicture": {"label": "Speaker"},
     "FullscreenBroll": {"label": "Evidence"},
     "SplitScreen": {"leftLabel": "Speaker", "rightLabel": "Demo"},
+    "KineticHeadline": {
+        "eyebrow": "One clear idea",
+        "headline": "Make every second count",
+        "accent": "count",
+    },
+    "PriceComparison": {"lowValue": "$1", "highValue": "$10K", "label": "Value"},
 }
 
 
@@ -141,7 +147,7 @@ def _plan(context: ProjectContext) -> dict[str, Any]:
 
 def test_phase10_catalog_has_typed_deterministic_paths() -> None:
     catalog = json.loads((ROOT / "config" / "component-catalog.json").read_text(encoding="utf-8"))
-    assert catalog["version"] == 2
+    assert catalog["version"] == 3
     assert {component["name"] for component in catalog["components"]} == set(GRAPHIC_PROPS)
     graphics_source = (ROOT / "remotion" / "src" / "Graphics.tsx").read_text(encoding="utf-8")
     for component, props in GRAPHIC_PROPS.items():
@@ -157,6 +163,8 @@ def test_phase10_catalog_has_typed_deterministic_paths() -> None:
         "HookCaption",
         "DefinitionCaption",
         "QuestionCaption",
+        "ViralPunchCaption",
+        "BoxedKeywordCaption",
         "UrduScriptCaption",
     ):
         assert component in captions_source

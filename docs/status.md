@@ -1,17 +1,18 @@
 # CutMachine Build Status
 
-- Active phase: Complete - CutMachine v2.0
+- Active phase: Phase 12 - Viral social design expansion
 - Status: Complete
+- Phase 12 completed: 2026-07-16
 - Phase 11 completed: 2026-07-16
-- Completed phases: Phase 0 - Repository and doctor; Phase 1 - Orchestrator and project state; Phase 2 - Ingest and transcription; Phase 3 - Transcript normalization; Phase 4 - Timeline automation; Phase 5 - Cowork planning contract; Phase 6 - Remotion MVP; Phase 7 - Asset system; Phase 8 - Technical finishing; Phase 9 - Review and QC; Phase 10 - Advanced design system; Phase 11 - Learning and optimization
+- Completed phases: Phase 0 - Repository and doctor; Phase 1 - Orchestrator and project state; Phase 2 - Ingest and transcription; Phase 3 - Transcript normalization; Phase 4 - Timeline automation; Phase 5 - Cowork planning contract; Phase 6 - Remotion MVP; Phase 7 - Asset system; Phase 8 - Technical finishing; Phase 9 - Review and QC; Phase 10 - Advanced design system; Phase 11 - Learning and optimization; Phase 12 - Viral social design expansion
 - Blocking environment finding: None
 
 ## Verified 2026-07-16
 
-- Python format: pass (55 files)
+- Python format: pass
 - Python lint: pass
-- Python strict type check: pass (54 source files)
-- Python tests: pass (185 tests)
+- Python strict type check: pass
+- Python tests: pass (189 tests)
 - Doctor: ready with Python 3.12.10, Node 24.18.0, FFmpeg/FFprobe 8.1.2, Faster-Whisper 1.2.1, and Remotion dependencies
 - Remotion lint and TypeScript: pass
 - Remotion production bundle: pass
@@ -36,4 +37,13 @@
 - Browser preview server: pass at `http://127.0.0.1:8765/index.html`; in-app screenshot inspection unavailable because no browser backend was exposed in this session
 - Phase boundary: pass; all planned roadmap phases are complete
 
-CutMachine v2.0 is complete. The workflow remains local-first, requires one explicit human approval, and does not publish automatically.
+## Phase 12 verification
+
+- Original `viral-punch` and `boxed-keyword` caption presets with immutable word timing and frame-driven motion: pass
+- `viral-social` energetic-mode preset with existing mode compatibility: pass
+- Typed `KineticHeadline` and `PriceComparison` graphics with strict bounded props: pass
+- Modern phone/search demonstration with validated local strings and staggered frame timing: pass
+- Portrait typography hierarchy, spacing, contrast, and caption safe-zone screenshot inspection: pass
+- Remotion lint, TypeScript, production bundle, and zero-vulnerability audit: pass
+- Real three-second H.264/AAC portrait preview at 540x960 and 30 fps: pass
+- Phase boundary: pass; the local-first roadmap is complete through the optional viral social design expansion

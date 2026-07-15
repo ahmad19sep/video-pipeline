@@ -31,9 +31,9 @@
       "additionalProperties": false,
       "required": ["preset", "intensity", "captionPreset", "transitionDensity", "visualChangeTargetSeconds"],
       "properties": {
-        "preset": {"enum": ["modern-ai", "minimal-professional", "documentary", "custom"]},
+        "preset": {"enum": ["modern-ai", "minimal-professional", "documentary", "viral-social", "custom"]},
         "intensity": {"enum": ["fast", "balanced", "energetic", "cinematic", "custom"]},
-        "captionPreset": {"enum": ["roman-word-highlight", "clean-two-line", "hook", "definition", "question", "urdu-script"]},
+        "captionPreset": {"enum": ["roman-word-highlight", "clean-two-line", "hook", "definition", "question", "viral-punch", "boxed-keyword", "urdu-script"]},
         "transitionDensity": {"enum": ["none", "low", "medium"]},
         "visualChangeTargetSeconds": {"type": "number", "minimum": 1.5, "maximum": 15}
       }

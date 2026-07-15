@@ -198,7 +198,11 @@ def build_baseline_plan(
     style_preset = (
         "documentary"
         if mode == "cinematic"
-        else ("minimal-professional" if mode == "fast" else "modern-ai")
+        else (
+            "minimal-professional"
+            if mode == "fast"
+            else ("viral-social" if mode == "energetic" else "modern-ai")
+        )
     )
     artifacts = cast(dict[str, Any], media_info["artifacts"])
     return {

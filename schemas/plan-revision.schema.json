@@ -25,7 +25,7 @@
         {"type": "object", "additionalProperties": false, "required": ["op", "sceneId", "camera"], "properties": {"op": {"const": "set-scene-camera"}, "sceneId": {"type": "string", "pattern": "^scene_[0-9]{6}$"}, "camera": {"$ref": "#/$defs/camera"}}},
         {"type": "object", "additionalProperties": false, "required": ["op", "sceneId", "layout"], "properties": {"op": {"const": "set-scene-layout"}, "sceneId": {"type": "string", "pattern": "^scene_[0-9]{6}$"}, "layout": {"enum": ["speaker-fullscreen", "speaker-with-title", "speaker-with-broll", "fullscreen-broll", "split-screen", "browser-demo", "mobile-demo", "graphic-fullscreen", "picture-in-picture"]}}},
         {"type": "object", "additionalProperties": false, "required": ["op", "sceneId", "query"], "properties": {"op": {"const": "set-scene-broll-query"}, "sceneId": {"type": "string", "pattern": "^scene_[0-9]{6}$"}, "query": {"type": ["string", "null"], "minLength": 1, "maxLength": 120}}},
-        {"type": "object", "additionalProperties": false, "required": ["op", "captionPreset"], "properties": {"op": {"const": "set-caption-preset"}, "captionPreset": {"enum": ["roman-word-highlight", "clean-two-line", "hook", "definition", "question", "urdu-script"]}}}
+        {"type": "object", "additionalProperties": false, "required": ["op", "captionPreset"], "properties": {"op": {"const": "set-caption-preset"}, "captionPreset": {"enum": ["roman-word-highlight", "clean-two-line", "hook", "definition", "question", "viral-punch", "boxed-keyword", "urdu-script"]}}}
       ]
     }
   }

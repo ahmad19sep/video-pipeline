@@ -30,7 +30,7 @@
       "required": ["preference", "captionPreset", "transitionDensity", "visualChangeTargetSeconds", "effectBudgetScale", "activate"],
       "properties": {
         "preference": {"enum": ["preferred", "rejected"]},
-        "captionPreset": {"type": ["string", "null"], "enum": ["roman-word-highlight", "clean-two-line", "hook", "definition", "question", "urdu-script", null]},
+        "captionPreset": {"type": ["string", "null"], "enum": ["roman-word-highlight", "clean-two-line", "hook", "definition", "question", "viral-punch", "boxed-keyword", "urdu-script", null]},
         "transitionDensity": {"type": ["string", "null"], "enum": ["none", "low", "medium", null]},
         "visualChangeTargetSeconds": {"type": ["number", "null"], "minimum": 1.5, "maximum": 12},
         "effectBudgetScale": {"type": ["number", "null"], "minimum": 0.5, "maximum": 1},

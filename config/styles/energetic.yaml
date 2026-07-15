@@ -2,7 +2,7 @@ style:
   name: energetic
   visual_change_target_seconds: 2.8
   transition_density: medium
-  caption_preset: roman-word-highlight
+  caption_preset: viral-punch
   effect_budgets:
     transitions_per_minute: 8
     camera_moves_per_minute: 10

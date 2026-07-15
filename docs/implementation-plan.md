@@ -1,62 +1,41 @@
-# Phase 11 Implementation Plan
+# Phase 12 Implementation Plan
 
 Status: Complete on 2026-07-16.
 
 ## Scope
 
-Add a local, auditable learning loop from explicit review decisions while preserving the single human checkpoint, immutable media/timing evidence, deterministic fallbacks, and reproducible rendering. Track accepted/rejected decisions, preferred assets, approved caption corrections, bounded style tuning, and measured performance improvements. The system must not infer approval from silence, mutate source artifacts, execute learned code, publish content, or require paid/network services.
+Add a schema-safe viral social design expansion for portrait explainers and Shorts. Use observable patterns from user-provided references and official public Shorts without claiming access to private After Effects projects or copying creator branding, handles, promotional wrappers, reference footage, or proprietary assets.
 
 ## Tasks
 
-1. Define versioned local schemas for decision history, asset preferences, caption corrections, style tuning, and performance measurements.
-2. Accept learning events only from explicit, current, project-bound approval or revision decisions whose referenced artifacts and hashes revalidate.
-3. Store append-only accepted/rejected decision records with stable IDs, timestamps, project provenance, decision scope, and before/after evidence.
-4. Record asset preference signals from explicit acceptance/rejection without changing licensing, attribution, hash, source, or project evidence.
-5. Incorporate bounded preference scores into deterministic asset ranking after relevance and license gates, with stable tie-breaking and no automatic provider expansion.
-6. Add an approved caption-correction dictionary containing heard text, preferred display, bounded context terms, provenance, and approval time.
-7. Apply caption corrections before optional refinement while preserving the exact ordered immutable word IDs and source/remapped timestamps.
-8. Keep protected technical glossary terms authoritative and reject corrections that merge, split, reorder, delete, or retime words.
-9. Derive bounded per-mode style-tuning suggestions from accepted/rejected structured decisions; require explicit activation and retain default profiles as fallbacks.
-10. Restrict learned style values to the existing component, transition, effect-budget, color, screen-treatment, and safe-zone allowlists.
-11. Add deterministic cache reuse and stage timing measurements without skipping hash/schema revalidation or changing output semantics.
-12. Surface learning provenance, active preferences/corrections, style overrides, cache hits, and timing summaries in project/review evidence.
-13. Add migration, corruption, duplicate-event, stale-project, unsafe-path, tampered-evidence, deterministic-ranking, timing-preservation, offline, and graceful-fallback tests.
-14. Run formatting, linting, strict typing, Python tests, doctor, Remotion checks/bundle, representative end-to-end inspection, duration/codec validation, and dependency audit.
-
-## Risks
-
-- Feedback may be ambiguous; only explicit structured decisions may become learning events.
-- Preference feedback can overpower semantic relevance or licensing unless ranking weights and order remain bounded.
-- Caption corrections can corrupt technical terms or timing unless the one-to-one immutable-word contract is revalidated.
-- Style tuning can drift toward excessive effects unless all learned values remain inside existing mode budgets.
-- Cache optimization can reuse stale artifacts unless every hit is schema-, project-, dependency-, and hash-bound.
-- Cross-project history can leak private content unless records contain only the minimal approved structured context.
+1. Add original `viral-punch` and `boxed-keyword` caption presets with deterministic word-timed motion.
+2. Add a `viral-social` design preset and make it the energetic-mode baseline while retaining all existing modes and fallbacks.
+3. Add typed price/comparison and kinetic-headline graphics for high-value data beats.
+4. Upgrade the existing mobile-screen component into a modern search/demo treatment using only validated strings and arrays.
+5. Keep one focal message per beat, generous portrait safe zones, limited colors, and short frame-driven entrances.
+6. Use clean cuts and reaction/reframe changes as the baseline; effects remain inside existing transition, camera, graphic, and SFX budgets.
+7. Update component-catalog and plan/render schemas without accepting arbitrary CSS, code, fonts, colors, URLs, or paths.
+8. Add contract, unsafe-input, deterministic-timing, fallback, and representative render tests.
+9. Run Python format/lint/types/tests, doctor, Remotion lint/build, real still/video inspection, duration/codec checks, and dependency audit.
 
 ## Acceptance tests
 
-- Only explicit current review outcomes produce schema-valid append-only learning events; stale, duplicated, tampered, or malformed events are rejected.
-- Accepted/rejected asset signals affect ranking deterministically but never bypass relevance, ownership/license, attribution, orientation, or quality gates.
-- Approved caption corrections are reused by bounded context and preserve exact word IDs, ordering, raw text, source timestamps, and remapped timestamps.
-- Protected technical terms remain authoritative, and uncertain or conflicting corrections fall back to the existing deterministic normalizer.
-- Style tuning stays within known presets, component/transition allowlists, safe zones, color bounds, and per-mode effect budgets, with defaults available at all times.
-- Learning records contain no raw media, full transcript, secrets, executable fields, absolute paths, or traversal paths.
-- Cache hits revalidate dependencies and hashes, produce byte-equivalent artifacts where required, and fall back safely after corruption.
-- Performance reports use monotonic stage timings and demonstrate improvement without weakening validation or changing observable output contracts.
-- A clean offline project can run through draft, QC, explicit review, learning update, and a future reuse path without paid services.
-- Existing Phase 9 review/approval and Phase 10 design behavior plus all immutable source, transcript, and timeline evidence remain unchanged.
-- Formatting, linting, strict types, Python tests, doctor, Remotion checks/bundle, representative render inspection, duration/codec checks, and NPM audit pass.
+- New captions preserve authoritative word IDs, text, order, start/end timing, and safe zones.
+- Caption animation is driven only by Remotion frames and explicit interpolation; no CSS animations or transitions are used.
+- New graphic props are strict, bounded, typed, and reject unknown values and executable/path fields.
+- Energetic mode selects the new design while fast, balanced, and cinematic behavior remains compatible.
+- Price labels, phone demos, and kinetic typography have one clear focal point and remain legible at portrait viewing size.
+- Missing optional assets preserve a valid speaker/graphic fallback.
+- Existing Phase 9 review, Phase 10 design, Phase 11 learning, final delivery, and local-first behavior remain valid.
 
 ## Phase boundary
 
-Phase 11 is the final planned roadmap phase. Do not add publishing, autonomous approval, arbitrary learned execution, or paid-service requirements.
+This phase adds design primitives only. It does not add publishing, autonomous approval, paid services, remote runtime assets, creator impersonation, or arbitrary After Effects/project execution.
 
 ## Completion record
 
-- Added strict v1 schemas for feedback, append-only learning events, derived preferences/corrections/style profiles, performance reports, and delivery records.
-- Bound every learning event to current project review/QC hashes and immutable snapshots; unsafe, duplicated, stale, malformed, or tampered evidence is rejected.
-- Applied learning only through bounded deterministic hooks: safe-tier asset tie-breaking, one-word caption display correction after glossary protection, and explicitly activated per-mode reductions inside existing design budgets.
-- Added automatic full-resolution Remotion rendering and FFmpeg fast-start delivery only after explicit approval, with hash-, codec-, dimension-, duration-, and approval-bound validation.
-- Modernized the script-free local review/editor surface and exposed learning provenance without adding remote resources or write controls.
-- Added timing and validated cache-hit evidence without weakening resume revalidation.
-- Added focused schema, corruption, duplicate, unsafe-path, protected-term, ranking, timing-preservation, fallback, performance, and real final-render tests.
-- Completed the final roadmap boundary without publishing, autonomous approval, learned execution, or paid/network dependencies.
+- Added two typed caption presets, one design preset, two catalogued graphics, and an upgraded phone/search component.
+- Preserved caption IDs, wording, order, timestamps, safe zones, local font fallback, and existing effect budgets.
+- Verified strict schemas, runtime validation, energetic-mode selection, deterministic frame motion, representative real renders, and existing design behavior.
+- Inspected headline, phone-demo, and value-comparison portrait frames at original resolution and corrected word spacing plus preview data wiring from visual evidence.
+- Passed Python format, lint, strict types, all 189 tests, environment doctor, Remotion lint/types/build, dependency audit, and H.264/AAC preview metadata checks.
