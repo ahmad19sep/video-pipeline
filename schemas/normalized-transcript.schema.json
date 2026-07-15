@@ -42,7 +42,7 @@
         "language": {"type": "string", "minLength": 2},
         "confidence": {"type": "number", "minimum": 0, "maximum": 1},
         "source": {"const": "faster-whisper"},
-        "normalizationSource": {"enum": ["preserved", "technical-glossary", "local-lexicon", "deterministic-transliteration", "external-refinement"]},
+        "normalizationSource": {"enum": ["preserved", "technical-glossary", "approved-correction", "local-lexicon", "deterministic-transliteration", "external-refinement"]},
         "lockedTiming": {"const": true}
       }
     },

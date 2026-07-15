@@ -16,3 +16,5 @@ Rules:
 - Use project-relative paths only.
 
 The local baseline plan is already valid. Change only choices supported by validated evidence.
+
+When explicit human feedback should be retained for future projects, write a separate project-relative `review/learning-feedback.json` matching `learning-feedback` schema v1. Reference only asset IDs from the current manifest and immutable word IDs from the current raw transcript. Never infer feedback, approval, correction, or style activation from silence. Do not include paths, transcript passages, code, secrets, or unstructured instructions. CutMachine validates and snapshots this file only when the human submits an explicit approval or typed revision decision.

@@ -21,10 +21,8 @@ python cutmachine.py doctor
 python cutmachine.py run <video> --mode <fast|balanced|energetic|cinematic>
 python cutmachine.py resume <project>
 python cutmachine.py status <project>
-python cutmachine.py review <project>
-python cutmachine.py render <project> --quality draft
-python cutmachine.py render <project> --quality final
-python cutmachine.py verify <project>
+python cutmachine.py approve <project> [--feedback <project-relative-learning-feedback.json>]
+python cutmachine.py request-revision <project> <project-relative-plan-revision.json> [--feedback <project-relative-learning-feedback.json>]
 ```
 
 Use repository-documented commands if their exact syntax differs. Do not invent commands.
@@ -52,7 +50,7 @@ Use repository-documented commands if their exact syntax differs. Do not invent 
 9. Present the draft path and a concise editing summary.
 10. Stop for the single human review checkpoint. Ask the user to reply `render` or provide changes.
 11. When the user requests changes, modify only the affected structured plan fields, validate, and rerender only invalidated stages.
-12. On `render`, create the final master, run verification, and report the output path and warnings.
+12. On `render`, record explicit approval with `approve`; CutMachine creates and verifies the final master automatically. Report the output path and warnings.
 
 ## Editorial rules
 

@@ -98,9 +98,11 @@ def test_phase9_approval_is_explicit_and_project_bound(
     approved = approve_project(repository, created.project_dir, "Reviewed the local QC package.")
     state = open_project(repository, created.project_dir).state_store.load()
 
-    assert approved.workflow_state == "approved"
-    assert approved.next_stage == "final_rendered"
+    assert approved.workflow_state == "completed"
+    assert approved.next_stage is None
     assert state.stage("approved").status == "completed"
+    assert state.stage("final_rendered").status == "completed"
+    assert state.stage("completed").status == "completed"
 
 
 def test_phase9_revision_invalidates_plan_and_downstream_only(

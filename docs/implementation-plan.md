@@ -1,5 +1,7 @@
 # Phase 11 Implementation Plan
 
+Status: Complete on 2026-07-16.
+
 ## Scope
 
 Add a local, auditable learning loop from explicit review decisions while preserving the single human checkpoint, immutable media/timing evidence, deterministic fallbacks, and reproducible rendering. Track accepted/rejected decisions, preferred assets, approved caption corrections, bounded style tuning, and measured performance improvements. The system must not infer approval from silence, mutate source artifacts, execute learned code, publish content, or require paid/network services.
@@ -47,3 +49,14 @@ Add a local, auditable learning loop from explicit review decisions while preser
 ## Phase boundary
 
 Phase 11 is the final planned roadmap phase. Do not add publishing, autonomous approval, arbitrary learned execution, or paid-service requirements.
+
+## Completion record
+
+- Added strict v1 schemas for feedback, append-only learning events, derived preferences/corrections/style profiles, performance reports, and delivery records.
+- Bound every learning event to current project review/QC hashes and immutable snapshots; unsafe, duplicated, stale, malformed, or tampered evidence is rejected.
+- Applied learning only through bounded deterministic hooks: safe-tier asset tie-breaking, one-word caption display correction after glossary protection, and explicitly activated per-mode reductions inside existing design budgets.
+- Added automatic full-resolution Remotion rendering and FFmpeg fast-start delivery only after explicit approval, with hash-, codec-, dimension-, duration-, and approval-bound validation.
+- Modernized the script-free local review/editor surface and exposed learning provenance without adding remote resources or write controls.
+- Added timing and validated cache-hit evidence without weakening resume revalidation.
+- Added focused schema, corruption, duplicate, unsafe-path, protected-term, ranking, timing-preservation, fallback, performance, and real final-render tests.
+- Completed the final roadmap boundary without publishing, autonomous approval, learned execution, or paid/network dependencies.

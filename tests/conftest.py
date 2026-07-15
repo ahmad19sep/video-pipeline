@@ -110,6 +110,12 @@ def phase2_workers(monkeypatch: pytest.MonkeyPatch) -> None:
         "prepare_review_checkpoint",
         lambda _context: ["review/index.html", "review/qc-report.json"],
     )
+    monkeypatch.setattr(
+        orchestrator,
+        "render_final_delivery",
+        lambda _context: ["renders/final.mp4", "renders/delivery-record.json"],
+    )
+    monkeypatch.setattr(orchestrator, "record_learning_event", lambda *args, **kwargs: [])
     monkeypatch.setattr(orchestrator, "validate_ingest_outputs", lambda _context: None)
     monkeypatch.setattr(orchestrator, "validate_transcript_outputs", lambda _context: None)
     monkeypatch.setattr(orchestrator, "validate_normalized_outputs", lambda _context: None)
@@ -120,6 +126,9 @@ def phase2_workers(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(orchestrator, "validate_preprocess_outputs", lambda _context: None)
     monkeypatch.setattr(orchestrator, "validate_draft_outputs", lambda _context: None)
     monkeypatch.setattr(orchestrator, "validate_qc_outputs", lambda _context: None)
+    monkeypatch.setattr(orchestrator, "validate_final_delivery", lambda _context: None)
+    monkeypatch.setattr(orchestrator, "validate_learning_store", lambda _root: None)
+    monkeypatch.setattr(orchestrator, "validate_performance_report", lambda _context: None)
 
 
 def generate_real_video(path: Path, *, audio: bool = True, video: bool = True) -> None:

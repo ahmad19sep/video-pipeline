@@ -13,11 +13,12 @@
     "counts": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["words", "preserved", "technicalGlossary", "localLexicon", "transliterated", "externallyRefined"],
+      "required": ["words", "preserved", "technicalGlossary", "approvedCorrections", "localLexicon", "transliterated", "externallyRefined"],
       "properties": {
         "words": {"type": "integer", "minimum": 0},
         "preserved": {"type": "integer", "minimum": 0},
         "technicalGlossary": {"type": "integer", "minimum": 0},
+        "approvedCorrections": {"type": "integer", "minimum": 0},
         "localLexicon": {"type": "integer", "minimum": 0},
         "transliterated": {"type": "integer", "minimum": 0},
         "externallyRefined": {"type": "integer", "minimum": 0}

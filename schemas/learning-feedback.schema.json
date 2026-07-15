@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cutmachine.local/schemas/learning-feedback-v1.schema.json",
+  "title": "CutMachine Explicit Learning Feedback v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "projectId", "assetSignals", "captionCorrections", "styleSignal"],
+  "properties": {
+    "version": {"const": 1},
+    "projectId": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"},
+    "assetSignals": {"type": "array", "maxItems": 50, "uniqueItems": true, "items": {"$ref": "#/$defs/assetSignal"}},
+    "captionCorrections": {"type": "array", "maxItems": 50, "uniqueItems": true, "items": {"$ref": "#/$defs/captionCorrection"}},
+    "styleSignal": {"anyOf": [{"$ref": "#/$defs/styleSignal"}, {"type": "null"}]}
+  },
+  "$defs": {
+    "assetSignal": {
+      "type": "object", "additionalProperties": false, "required": ["assetId", "preference"],
+      "properties": {"assetId": {"type": "string", "pattern": "^asset_[a-f0-9]{16}$"}, "preference": {"enum": ["preferred", "rejected"]}}
+    },
+    "captionCorrection": {
+      "type": "object", "additionalProperties": false, "required": ["wordId", "preferred", "context"],
+      "properties": {
+        "wordId": {"type": "string", "pattern": "^word_[0-9]{6}$"},
+        "preferred": {"type": "string", "minLength": 1, "maxLength": 80, "pattern": "^\\S+$"},
+        "context": {"type": "array", "maxItems": 8, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 40, "pattern": "^\\S+$"}}
+      }
+    },
+    "styleSignal": {
+      "type": "object", "additionalProperties": false,
+      "required": ["preference", "captionPreset", "transitionDensity", "visualChangeTargetSeconds", "effectBudgetScale", "activate"],
+      "properties": {
+        "preference": {"enum": ["preferred", "rejected"]},
+        "captionPreset": {"type": ["string", "null"], "enum": ["roman-word-highlight", "clean-two-line", "hook", "definition", "question", "urdu-script", null]},
+        "transitionDensity": {"type": ["string", "null"], "enum": ["none", "low", "medium", null]},
+        "visualChangeTargetSeconds": {"type": ["number", "null"], "minimum": 1.5, "maximum": 12},
+        "effectBudgetScale": {"type": ["number", "null"], "minimum": 0.5, "maximum": 1},
+        "activate": {"type": "boolean"}
+      }
+    }
+  }
+}

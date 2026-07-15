@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cutmachine.local/schemas/learning-event-v1.schema.json",
+  "title": "CutMachine Immutable Learning Event v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "eventId", "projectId", "createdAt", "action", "reviewAction", "mode", "projectSourceHash", "decisionSnapshotPath", "decisionSha256", "qcSnapshotPath", "qcSha256", "feedbackSnapshotPath", "feedbackSha256", "assetSignals", "captionCorrections", "styleSignal"],
+  "properties": {
+    "version": {"const": 1},
+    "eventId": {"type": "string", "pattern": "^event_[a-f0-9]{16}$"},
+    "projectId": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"},
+    "createdAt": {"type": "string", "format": "date-time"},
+    "action": {"enum": ["accepted", "rejected"]},
+    "reviewAction": {"enum": ["approved", "revision-requested"]},
+    "mode": {"enum": ["fast", "balanced", "energetic", "cinematic"]},
+    "projectSourceHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "decisionSnapshotPath": {"$ref": "#/$defs/safeRelativePath"}, "decisionSha256": {"$ref": "#/$defs/sha256"},
+    "qcSnapshotPath": {"$ref": "#/$defs/safeRelativePath"}, "qcSha256": {"$ref": "#/$defs/sha256"},
+    "feedbackSnapshotPath": {"anyOf": [{"$ref": "#/$defs/safeRelativePath"}, {"type": "null"}]},
+    "feedbackSha256": {"anyOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
+    "assetSignals": {"type": "array", "maxItems": 50, "uniqueItems": true, "items": {"$ref": "#/$defs/assetSignal"}},
+    "captionCorrections": {"type": "array", "maxItems": 50, "uniqueItems": true, "items": {"$ref": "#/$defs/captionCorrection"}},
+    "styleSignal": {"anyOf": [{"$ref": "#/$defs/styleSignal"}, {"type": "null"}]}
+  },
+  "$defs": {
+    "safeRelativePath": {"type": "string", "minLength": 1, "allOf": [{"not": {"pattern": "(^[A-Za-z]:)|(^/)|(^\\\\)|(^~)"}}, {"not": {"pattern": "(^|[\\\\/])\\.\\.([\\\\/]|$)"}}]},
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "assetSignal": {
+      "type": "object", "additionalProperties": false, "required": ["provider", "providerId", "sha256", "preference"],
+      "properties": {"provider": {"enum": ["local", "cache", "pexels"]}, "providerId": {"type": "string", "minLength": 1, "maxLength": 500}, "sha256": {"$ref": "#/$defs/sha256"}, "preference": {"enum": ["preferred", "rejected"]}}
+    },
+    "captionCorrection": {
+      "type": "object", "additionalProperties": false, "required": ["heard", "preferred", "context"],
+      "properties": {"heard": {"type": "string", "minLength": 1, "maxLength": 80}, "preferred": {"type": "string", "minLength": 1, "maxLength": 80, "pattern": "^\\S+$"}, "context": {"type": "array", "maxItems": 8, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 40, "pattern": "^\\S+$"}}}
+    },
+    "styleSignal": {
+      "type": "object", "additionalProperties": false,
+      "required": ["preference", "captionPreset", "transitionDensity", "visualChangeTargetSeconds", "effectBudgetScale", "activate"],
+      "properties": {
+        "preference": {"enum": ["preferred", "rejected"]},
+        "captionPreset": {"type": ["string", "null"], "enum": ["roman-word-highlight", "clean-two-line", "hook", "definition", "question", "urdu-script", null]},
+        "transitionDensity": {"type": ["string", "null"], "enum": ["none", "low", "medium", null]},
+        "visualChangeTargetSeconds": {"type": ["number", "null"], "minimum": 1.5, "maximum": 12},
+        "effectBudgetScale": {"type": ["number", "null"], "minimum": 0.5, "maximum": 1},
+        "activate": {"type": "boolean"}
+      }
+    }
+  }
+}

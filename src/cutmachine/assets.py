@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any, cast
 
 from cutmachine.config import load_config
+from cutmachine.learning import asset_preference_scores
 from cutmachine.media import MediaError, probe_media, run_media_command
 from cutmachine.paths import UnsafePathError, resolve_inside
 from cutmachine.persistence import (
@@ -612,7 +613,11 @@ class PexelsAdapter:
         return candidates
 
 
-def _score(request: dict[str, Any], candidate: dict[str, Any]) -> tuple[float, dict[str, float]]:
+def _score(
+    request: dict[str, Any],
+    candidate: dict[str, Any],
+    preference_scores: dict[tuple[str, str], float],
+) -> tuple[float, dict[str, float]]:
     query_tokens = _tokens(cast(str, request["query"]))
     candidate_tokens = set(cast(list[str], candidate["tags"])) | _tokens(
         cast(str, candidate["providerId"])
@@ -637,6 +642,16 @@ def _score(request: dict[str, Any], candidate: dict[str, Any]) -> tuple[float, d
     quality_score = 0.0 if candidate["watermark"] else 1.0
     license_score = 1.0 if cast(str, candidate["license"]).casefold() in _LICENSES else 0.0
     reuse_score = 1 / (1 + int(candidate["usageCount"]))
+    preference_value = max(
+        -1.0,
+        min(
+            1.0,
+            preference_scores.get(
+                (cast(str, candidate["provider"]), cast(str, candidate["providerId"])),
+                0.0,
+            ),
+        ),
+    )
     scores = {
         "query": round(query_score, 6),
         "orientation": round(orientation_score, 6),
@@ -645,6 +660,7 @@ def _score(request: dict[str, Any], candidate: dict[str, Any]) -> tuple[float, d
         "quality": round(quality_score, 6),
         "license": round(license_score, 6),
         "reuse": round(reuse_score, 6),
+        "preference": round((preference_value + 1) / 2, 6),
     }
     total = (
         query_score * 0.4
@@ -662,7 +678,9 @@ def rank_candidates(
     request: dict[str, Any],
     candidates: list[dict[str, Any]],
     minimum_score: float,
+    preference_scores: dict[tuple[str, str], float] | None = None,
 ) -> tuple[dict[str, Any] | None, dict[str, Any]]:
+    preferences = preference_scores or {}
     compatible = [
         candidate
         for candidate in candidates
@@ -681,6 +699,7 @@ def rank_candidates(
                 "quality",
                 "license",
                 "reuse",
+                "preference",
             )
         }
         return None, {
@@ -697,8 +716,14 @@ def rank_candidates(
         tier_candidates = [item for item in compatible if item["tier"] == tier]
         if not tier_candidates:
             continue
-        scored = [(_score(request, item), item) for item in tier_candidates]
-        scored.sort(key=lambda value: (-value[0][0], cast(str, value[1]["id"])))
+        scored = [(_score(request, item, preferences), item) for item in tier_candidates]
+        scored.sort(
+            key=lambda value: (
+                -value[0][0],
+                -value[0][1]["preference"],
+                cast(str, value[1]["id"]),
+            )
+        )
         (total, scores), selected = scored[0]
         if best_below is None or total > best_below[0]:
             best_below = total, scores
@@ -712,7 +737,8 @@ def rank_candidates(
                 "scores": scores,
                 "reason": (
                     "Selected deterministically from the earliest qualifying "
-                    "resolution tier, then score and candidate ID."
+                    "resolution tier, then score, bounded preference tie-break, "
+                    "and candidate ID."
                 ),
             }
     assert best_below is not None
@@ -919,8 +945,11 @@ def prepare_assets(
     selections: list[dict[str, Any]] = []
     selected_candidates: dict[str, dict[str, Any]] = {}
     minimum = float(config["assets"]["minimum_score"])
+    preferences = asset_preference_scores(context.repository_root)
     for request in request_values:
-        selected, evidence = rank_candidates(request, candidates, minimum)
+        selected, evidence = rank_candidates(
+            request, candidates, minimum, preference_scores=preferences
+        )
         has_graphic = bool(request["sceneId"] and scene_graphics.get(cast(str, request["sceneId"])))
         if selected is None and request["kind"] == "broll" and has_graphic:
             evidence["status"] = "graphic-fallback"
@@ -928,7 +957,9 @@ def prepare_assets(
         elif selected is None and adapter is not None:
             provider_values = adapter.search(request)
             candidates.extend(provider_values)
-            selected, evidence = rank_candidates(request, provider_values, minimum)
+            selected, evidence = rank_candidates(
+                request, provider_values, minimum, preference_scores=preferences
+            )
         selections.append(evidence)
         if selected is not None:
             selected_candidates[cast(str, request["id"])] = selected

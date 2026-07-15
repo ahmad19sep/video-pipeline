@@ -151,3 +151,19 @@ Implement advanced transitions as visual overlays within authoritative scene tim
 ## 2026-07-16 - ADR-0038: Bundle the Urdu font and keep preview/fallback paths deterministic
 
 Use the repository-bundled OFL-licensed Noto Naskh Arabic variable font only when its fixed path and hash validate, otherwise continue with the declared local fallback. Missing optional visual inputs must preserve a valid base composition. The exact Remotion Studio preview sentinel renders an internal deterministic backdrop so local preview does not depend on nonexistent placeholder media, while normal project inputs still require validated staged media.
+
+## 2026-07-16 - ADR-0039: Learn only from explicit hash-bound review events
+
+Create an append-only local learning event only alongside an explicit current approval or typed revision decision. Snapshot and hash the project-bound decision, QC report, and optional structured feedback under `workspace/.learning`; reject duplicates, stale ownership, changed evidence, unsafe paths, unknown IDs, and protected glossary overrides. Derived profiles are reproducible caches and are disabled when their source-event digest no longer validates.
+
+## 2026-07-16 - ADR-0040: Keep learned behavior bounded below safety and editorial contracts
+
+Apply asset preference only inside the earliest safe license-compatible tier as a bounded deterministic tie-break. Apply an approved caption correction to one matching immutable word display only, after the technical glossary and without changing raw text, IDs, order, or timestamps. Apply style learning only when explicitly activated and only through existing allowlisted presets and effect-budget reductions; deterministic defaults always remain available.
+
+## 2026-07-16 - ADR-0041: Explicit approval triggers verified final delivery
+
+After the single human approval, render the authoritative plan at its full planned dimensions with the repository-pinned Remotion CLI, run an FFmpeg stream-copy fast-start pass, atomically copy the master to `output/<slug>.mp4`, and persist approval hash, input, media metadata, and output hash in a strict delivery record. Resume accepts completion only after revalidating both workspace and delivery copies, codecs, dimensions, duration, input, and approval evidence.
+
+## 2026-07-16 - ADR-0042: Modern review remains static and read-only
+
+Present the review package as a responsive editor-like local surface with preview, timeline, transcript, asset, color, audio, learning, QC, and action sections. Preserve the Phase 9 security boundary: no scripts, remote resources, arbitrary plan execution, or implicit approval controls.

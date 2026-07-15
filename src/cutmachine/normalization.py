@@ -16,6 +16,7 @@ from typing import Any, Protocol, cast
 from urllib.parse import urlparse
 
 from cutmachine.config import load_config
+from cutmachine.learning import approved_caption_corrections
 from cutmachine.paths import UnsafePathError, resolve_inside, validate_relative_path
 from cutmachine.persistence import (
     PersistenceError,
@@ -231,7 +232,11 @@ def _transliterate(value: str) -> str:
 
 
 def _normalize_word(
-    raw_word: dict[str, Any], glossary: dict[str, str], lexicon: dict[str, str]
+    raw_word: dict[str, Any],
+    glossary: dict[str, str],
+    lexicon: dict[str, str],
+    corrections: list[dict[str, Any]],
+    context: set[str],
 ) -> dict[str, Any]:
     raw = cast(str, raw_word["raw"])
     prefix, core, suffix = _split_boundaries(raw)
@@ -241,6 +246,22 @@ def _normalize_word(
         display = f"{prefix}{glossary[lookup]}{suffix}"
         normalization_source = "technical-glossary"
         confidence = min(confidence, 0.98)
+    elif approved := sorted(
+        (
+            item
+            for item in corrections
+            if _split_boundaries(cast(str, item["heard"]))[1].casefold() == lookup
+            and (not item["context"] or context.intersection(cast(list[str], item["context"])))
+        ),
+        key=lambda item: (
+            -len(context.intersection(cast(list[str], item["context"]))),
+            -int(item["approvedCount"]),
+            cast(str, item["preferred"]).casefold(),
+        ),
+    ):
+        display = f"{prefix}{approved[0]['preferred']}{suffix}"
+        normalization_source = "approved-correction"
+        confidence = min(confidence, 0.99)
     elif core in lexicon:
         display = f"{prefix}{lexicon[core]}{suffix}"
         normalization_source = "local-lexicon"
@@ -405,7 +426,15 @@ def normalize_project(
     except PersistenceError as exc:
         raise NormalizationError(f"Raw transcript is missing or invalid: {exc}") from exc
     raw_words = cast(list[dict[str, Any]], raw_document["words"])
-    words = [_normalize_word(word, glossary, lexicon) for word in raw_words]
+    corrections = approved_caption_corrections(context.repository_root)
+    words = []
+    for index, word in enumerate(raw_words):
+        context_terms = {
+            _split_boundaries(cast(str, raw_words[item]["raw"]))[1].casefold()
+            for item in range(max(0, index - 2), min(len(raw_words), index + 3))
+            if item != index
+        }
+        words.append(_normalize_word(word, glossary, lexicon, corrections, context_terms))
 
     refinement = {
         "enabled": bool(refinement_config["enabled"]),
@@ -481,6 +510,7 @@ def normalize_project(
             "words": len(words),
             "preserved": counts["preserved"],
             "technicalGlossary": counts["technical-glossary"],
+            "approvedCorrections": counts["approved-correction"],
             "localLexicon": counts["local-lexicon"],
             "transliterated": counts["deterministic-transliteration"],
             "externallyRefined": counts["external-refinement"],
@@ -539,6 +569,7 @@ def validate_normalized_outputs(context: ProjectContext) -> None:
         "words": len(normalized_words),
         "preserved": counts["preserved"],
         "technicalGlossary": counts["technical-glossary"],
+        "approvedCorrections": counts["approved-correction"],
         "localLexicon": counts["local-lexicon"],
         "transliterated": counts["deterministic-transliteration"],
         "externallyRefined": counts["external-refinement"],

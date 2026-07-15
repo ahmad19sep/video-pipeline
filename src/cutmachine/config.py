@@ -67,6 +67,38 @@ def environment_layer(environment: Mapping[str, str] | None = None) -> Config:
     return result
 
 
+def _learning_style_layer(root: Path, style: str, current: Config) -> Config:
+    # Imported lazily because project context construction itself depends on config loading.
+    from cutmachine.learning import active_style_tuning
+
+    profile = active_style_tuning(root, style)
+    if profile is None:
+        return {}
+    learned: Config = {"style": {}}
+    learned_style = learned["style"]
+    for source, target in (
+        ("captionPreset", "caption_preset"),
+        ("transitionDensity", "transition_density"),
+        ("visualChangeTargetSeconds", "visual_change_target_seconds"),
+    ):
+        if profile.get(source) is not None:
+            learned_style[target] = profile[source]
+    scale = profile.get("effectBudgetScale")
+    current_style = current.get("style")
+    if isinstance(scale, (int, float)) and isinstance(current_style, dict):
+        budgets = current_style.get("effect_budgets")
+        if isinstance(budgets, dict):
+            learned_style["effect_budgets"] = {
+                key: (
+                    round(float(value) * float(scale), 6)
+                    if key == "fullscreen_broll_ratio"
+                    else max(0, int(float(value) * float(scale)))
+                )
+                for key, value in budgets.items()
+            }
+    return learned
+
+
 def load_config(
     root: Path,
     *,
@@ -77,6 +109,7 @@ def load_config(
     config_dir = root / "config"
     merged = _read_yaml(config_dir / "defaults.yaml")
     merged = deep_merge(merged, _read_yaml(config_dir / "styles" / f"{style}.yaml"))
+    merged = deep_merge(merged, _learning_style_layer(root, style, merged))
     if project_config is not None:
         merged = deep_merge(merged, _read_yaml(project_config))
     return deep_merge(merged, environment_layer(environment))

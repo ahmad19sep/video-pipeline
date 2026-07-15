@@ -14,6 +14,13 @@ from cutmachine.editorial import (
     validate_analysis_outputs,
     validate_timeline_outputs,
 )
+from cutmachine.learning import (
+    LearningError,
+    record_learning_event,
+    validate_learning_store,
+    validate_performance_report,
+    write_performance_report,
+)
 from cutmachine.locking import ProjectLock
 from cutmachine.media import MediaError, ingest_project, validate_ingest_outputs
 from cutmachine.normalization import (
@@ -32,7 +39,9 @@ from cutmachine.rendering import (
     RenderError,
     preprocess_project,
     render_draft,
+    render_final_delivery,
     validate_draft_outputs,
+    validate_final_delivery,
     validate_preprocess_outputs,
 )
 from cutmachine.review import (
@@ -213,13 +222,31 @@ def _run_registered_stages(
                 "awaiting_review",
                 lambda: prepare_review_checkpoint(context),
             )
+        elif next_stage == "final_rendered":
+            state = _execute_stage(
+                context,
+                state,
+                "final_rendered",
+                lambda: render_final_delivery(context),
+            )
+        elif next_stage == "completed":
+            state = _execute_stage(
+                context,
+                state,
+                "completed",
+                lambda: write_performance_report(context),
+            )
         else:
             return state
         if next_stage == stop_after:
             return state
 
 
-def _verify_completed_phase9(context: ProjectContext, state: ProjectState) -> ProjectState:
+def _verify_completed_pipeline(
+    context: ProjectContext,
+    state: ProjectState,
+    validated_cache_hits: list[str] | None = None,
+) -> ProjectState:
     store = context.state_store
     if state.stage("ingested").status == "completed":
         try:
@@ -228,6 +255,8 @@ def _verify_completed_phase9(context: ProjectContext, state: ProjectState) -> Pr
             state.invalidate_from("ingested")
             store.save(state)
             return state
+        if validated_cache_hits is not None:
+            validated_cache_hits.append("ingested")
     if state.stage("transcribed").status == "completed":
         try:
             validate_transcript_outputs(context)
@@ -235,6 +264,8 @@ def _verify_completed_phase9(context: ProjectContext, state: ProjectState) -> Pr
             state.invalidate_from("transcribed")
             store.save(state)
             return state
+        if validated_cache_hits is not None:
+            validated_cache_hits.append("transcribed")
     if state.stage("normalized").status == "completed":
         try:
             validate_normalized_outputs(context)
@@ -242,6 +273,8 @@ def _verify_completed_phase9(context: ProjectContext, state: ProjectState) -> Pr
             state.invalidate_from("normalized")
             store.save(state)
             return state
+        if validated_cache_hits is not None:
+            validated_cache_hits.append("normalized")
     if state.stage("analyzed").status == "completed":
         try:
             validate_analysis_outputs(context)
@@ -249,6 +282,8 @@ def _verify_completed_phase9(context: ProjectContext, state: ProjectState) -> Pr
             state.invalidate_from("analyzed")
             store.save(state)
             return state
+        if validated_cache_hits is not None:
+            validated_cache_hits.append("analyzed")
     if state.stage("timeline_ready").status == "completed":
         try:
             validate_timeline_outputs(context)
@@ -256,6 +291,8 @@ def _verify_completed_phase9(context: ProjectContext, state: ProjectState) -> Pr
             state.invalidate_from("timeline_ready")
             store.save(state)
             return state
+        if validated_cache_hits is not None:
+            validated_cache_hits.append("timeline_ready")
     if state.stage("plan_ready").status == "completed":
         try:
             validate_plan_outputs(context)
@@ -263,6 +300,8 @@ def _verify_completed_phase9(context: ProjectContext, state: ProjectState) -> Pr
             state.invalidate_from("plan_ready")
             store.save(state)
             return state
+        if validated_cache_hits is not None:
+            validated_cache_hits.append("plan_ready")
     if state.stage("assets_ready").status == "completed":
         try:
             validate_asset_readiness(context)
@@ -270,6 +309,8 @@ def _verify_completed_phase9(context: ProjectContext, state: ProjectState) -> Pr
             state.invalidate_from("assets_ready")
             store.save(state)
             return state
+        if validated_cache_hits is not None:
+            validated_cache_hits.append("assets_ready")
     if state.stage("preprocessed").status == "completed":
         try:
             validate_preprocess_outputs(context)
@@ -277,6 +318,8 @@ def _verify_completed_phase9(context: ProjectContext, state: ProjectState) -> Pr
             state.invalidate_from("preprocessed")
             store.save(state)
             return state
+        if validated_cache_hits is not None:
+            validated_cache_hits.append("preprocessed")
     if state.stage("draft_rendered").status == "completed":
         try:
             validate_draft_outputs(context)
@@ -284,6 +327,8 @@ def _verify_completed_phase9(context: ProjectContext, state: ProjectState) -> Pr
             state.invalidate_from("draft_rendered")
             store.save(state)
             return state
+        if validated_cache_hits is not None:
+            validated_cache_hits.append("draft_rendered")
     if state.stage("qc_passed").status == "completed":
         try:
             validate_qc_outputs(context)
@@ -291,6 +336,8 @@ def _verify_completed_phase9(context: ProjectContext, state: ProjectState) -> Pr
             state.invalidate_from("qc_passed")
             store.save(state)
             return state
+        if validated_cache_hits is not None:
+            validated_cache_hits.append("qc_passed")
     if state.stage("awaiting_review").status == "completed":
         try:
             prepare_review_checkpoint(context)
@@ -298,12 +345,36 @@ def _verify_completed_phase9(context: ProjectContext, state: ProjectState) -> Pr
             state.invalidate_from("awaiting_review")
             store.save(state)
             return state
+        if validated_cache_hits is not None:
+            validated_cache_hits.append("awaiting_review")
     if state.stage("approved").status == "completed":
         try:
             validate_review_decision(context, expected_action="approved")
         except ReviewError:
             state.invalidate_from("approved")
             store.save(state)
+            return state
+        if validated_cache_hits is not None:
+            validated_cache_hits.append("approved")
+    if state.stage("final_rendered").status == "completed":
+        try:
+            validate_final_delivery(context)
+        except RenderError:
+            state.invalidate_from("final_rendered")
+            store.save(state)
+            return state
+        if validated_cache_hits is not None:
+            validated_cache_hits.append("final_rendered")
+    if state.stage("completed").status == "completed":
+        try:
+            validate_performance_report(context)
+            validate_learning_store(context.repository_root)
+        except LearningError:
+            state.invalidate_from("completed")
+            store.save(state)
+            return state
+        if validated_cache_hits is not None:
+            validated_cache_hits.append("completed")
     return state
 
 
@@ -316,10 +387,11 @@ def run_new_project(
     with ProjectLock(context.project_dir):
         state = context.state_store.load()
         state = _run_registered_stages(context, state)
+        write_performance_report(context)
     return _result(
         context,
         state,
-        "Phase 9 boundary reached. Review the local QC package, then approve or request revisions.",
+        "Review boundary reached. Approve to render the final delivery or request revisions.",
     )
 
 
@@ -330,12 +402,14 @@ def resume_project(repository_root: Path, project: Path) -> OrchestratorResult:
         state = context.state_store.load()
         if state.recover_interrupted():
             context.state_store.save(state)
-        state = _verify_completed_phase9(context, state)
+        cache_hits: list[str] = []
+        state = _verify_completed_pipeline(context, state, cache_hits)
         state = _run_registered_stages(context, state)
+        write_performance_report(context, validated_cache_hits=cache_hits)
     return _result(
         context,
         state,
-        "Resume verification passed. Phase 9 QC and review artifacts are valid.",
+        "Resume verification passed; completed artifacts were hash-revalidated.",
     )
 
 
@@ -362,25 +436,34 @@ def rerun_from(repository_root: Path, project: Path, stage: str) -> Orchestrator
 
 
 def approve_project(
-    repository_root: Path, project: Path, note: str | None = None
+    repository_root: Path,
+    project: Path,
+    note: str | None = None,
+    feedback_relative: str | None = None,
 ) -> OrchestratorResult:
     context = open_project(repository_root, project)
     with ProjectLock(context.project_dir):
         verify_project(context)
         state = context.state_store.load()
-        state = _verify_completed_phase9(context, state)
+        state = _verify_completed_pipeline(context, state)
         if state.stage("awaiting_review").status != "completed":
             raise ReviewError("Project is not awaiting a valid review decision.")
-        state = _execute_stage(
-            context,
-            state,
-            "approved",
-            lambda: write_approval_decision(context, note),
-        )
+
+        def approve_worker() -> list[str]:
+            artifacts = write_approval_decision(context, note)
+            record_learning_event(
+                context,
+                expected_review_action="approved",
+                feedback_relative=feedback_relative,
+            )
+            return artifacts
+
+        state = _execute_stage(context, state, "approved", approve_worker)
+        state = _run_registered_stages(context, state)
     return _result(
         context,
         state,
-        "Approval recorded. Final delivery rendering remains a later phase.",
+        "Approval learned, final delivery rendered, and project completed.",
     )
 
 
@@ -389,15 +472,21 @@ def request_project_revision(
     project: Path,
     revision_relative: str,
     note: str | None = None,
+    feedback_relative: str | None = None,
 ) -> OrchestratorResult:
     context = open_project(repository_root, project)
     with ProjectLock(context.project_dir):
         verify_project(context)
         state = context.state_store.load()
-        state = _verify_completed_phase9(context, state)
+        state = _verify_completed_pipeline(context, state)
         if state.stage("awaiting_review").status != "completed":
             raise ReviewError("Project is not awaiting a valid review decision.")
         apply_review_revision(context, revision_relative, note)
+        record_learning_event(
+            context,
+            expected_review_action="revision-requested",
+            feedback_relative=feedback_relative,
+        )
         state.request_revision("plan_ready", note or "Structured review revision requested.")
         context.state_store.save(state)
     return _result(

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cutmachine.local/schemas/caption-corrections-v1.schema.json",
+  "title": "CutMachine Derived Caption Corrections v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "updatedAt", "sourceEventDigest", "eventCount", "corrections"],
+  "properties": {
+    "version": {"const": 1}, "updatedAt": {"type": "string", "format": "date-time"}, "sourceEventDigest": {"$ref": "#/$defs/sha256"}, "eventCount": {"type": "integer", "minimum": 0},
+    "corrections": {"type": "array", "uniqueItems": true, "items": {"type": "object", "additionalProperties": false, "required": ["id", "heard", "preferred", "context", "approvedCount", "lastApprovedAt"], "properties": {
+      "id": {"type": "string", "pattern": "^correction_[a-f0-9]{16}$"}, "heard": {"type": "string", "minLength": 1, "maxLength": 80}, "preferred": {"type": "string", "minLength": 1, "maxLength": 80, "pattern": "^\\S+$"}, "context": {"type": "array", "maxItems": 8, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 40}}, "approvedCount": {"type": "integer", "minimum": 1}, "lastApprovedAt": {"type": "string", "format": "date-time"}
+    }}}
+  },
+  "$defs": {"sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}}
+}

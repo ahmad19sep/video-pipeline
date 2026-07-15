@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cutmachine.local/schemas/performance-report-v1.schema.json",
+  "title": "CutMachine Performance Report v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "projectId", "generatedAt", "mode", "stages", "totalDurationSeconds", "priorMedianSeconds", "improvementPercent", "validatedCacheHits", "artifactsRevalidated"],
+  "properties": {
+    "version": {"const": 1}, "projectId": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"}, "generatedAt": {"type": "string", "format": "date-time"}, "mode": {"enum": ["fast", "balanced", "energetic", "cinematic"]},
+    "stages": {"type": "array", "uniqueItems": true, "items": {"type": "object", "additionalProperties": false, "required": ["name", "attempts", "durationSeconds"], "properties": {"name": {"type": "string", "minLength": 1}, "attempts": {"type": "integer", "minimum": 0}, "durationSeconds": {"type": "number", "minimum": 0}}}},
+    "totalDurationSeconds": {"type": "number", "minimum": 0}, "priorMedianSeconds": {"type": ["number", "null"], "minimum": 0}, "improvementPercent": {"type": ["number", "null"], "minimum": -1000, "maximum": 100}, "validatedCacheHits": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}, "artifactsRevalidated": {"const": true}
+  }
+}

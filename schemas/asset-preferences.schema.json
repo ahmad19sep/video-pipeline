@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cutmachine.local/schemas/asset-preferences-v1.schema.json",
+  "title": "CutMachine Derived Asset Preferences v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "updatedAt", "sourceEventDigest", "eventCount", "preferences"],
+  "properties": {
+    "version": {"const": 1}, "updatedAt": {"type": "string", "format": "date-time"}, "sourceEventDigest": {"$ref": "#/$defs/sha256"}, "eventCount": {"type": "integer", "minimum": 0},
+    "preferences": {"type": "array", "uniqueItems": true, "items": {"type": "object", "additionalProperties": false, "required": ["id", "provider", "providerId", "sha256", "preferredCount", "rejectedCount", "score"], "properties": {
+      "id": {"type": "string", "pattern": "^assetpref_[a-f0-9]{16}$"}, "provider": {"enum": ["local", "cache", "pexels"]}, "providerId": {"type": "string", "minLength": 1, "maxLength": 500}, "sha256": {"$ref": "#/$defs/sha256"}, "preferredCount": {"type": "integer", "minimum": 0}, "rejectedCount": {"type": "integer", "minimum": 0}, "score": {"type": "number", "minimum": -1, "maximum": 1}
+    }}}
+  },
+  "$defs": {"sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}}
+}

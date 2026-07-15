@@ -13,8 +13,8 @@ from pathlib import Path
 from typing import Any, cast
 
 from cutmachine.config import load_config
-from cutmachine.media import MediaError, probe_media
-from cutmachine.paths import resolve_inside
+from cutmachine.media import MediaError, probe_media, run_media_command
+from cutmachine.paths import UnsafePathError, resolve_inside
 from cutmachine.persistence import (
     PersistenceError,
     read_validated_json,
@@ -97,7 +97,12 @@ def _atomic_copy(source: Path, destination: Path) -> None:
         temporary.unlink(missing_ok=True)
 
 
-def build_render_input(context: ProjectContext, *, remotion_root: Path | None = None) -> Path:
+def build_render_input(
+    context: ProjectContext,
+    *,
+    remotion_root: Path | None = None,
+    final: bool = False,
+) -> Path:
     plan, timeline, manifest = _load_inputs(context)
     video = cast(dict[str, Any], plan["video"])
     try:
@@ -129,10 +134,13 @@ def build_render_input(context: ProjectContext, *, remotion_root: Path | None = 
         staged_assets[cast(str, item["id"])] = staged_relative
 
     config = load_config(context.repository_root, style=cast(str, context.project["mode"]))
-    short = int(config["render"]["draft_width"])
-    long = int(config["render"]["draft_height"])
-    portrait = int(video["height"]) > int(video["width"])
-    width, height = (short, long) if portrait else (long, short)
+    if final:
+        width, height = int(video["width"]), int(video["height"])
+    else:
+        short = int(config["render"]["draft_width"])
+        long = int(config["render"]["draft_height"])
+        portrait = int(video["height"]) > int(video["width"])
+        width, height = (short, long) if portrait else (long, short)
 
     scenes: list[dict[str, Any]] = []
     for raw_scene in cast(list[dict[str, Any]], plan["scenes"]):
@@ -222,7 +230,9 @@ def build_render_input(context: ProjectContext, *, remotion_root: Path | None = 
         },
         "assets": staged_assets,
     }
-    input_path = context.project_dir / "renders" / "draft-input.json"
+    input_path = (
+        context.project_dir / "renders" / ("final-input.json" if final else "draft-input.json")
+    )
     write_validated_json_atomic(context.repository_root, input_path, "render-input", render_input)
     return input_path
 
@@ -407,3 +417,218 @@ def validate_draft_outputs(context: ProjectContext) -> None:
         validate_final_pass(context)
     except TechnicalError as exc:
         raise RenderError(str(exc)) from exc
+
+
+def _validated_approval_decision(context: ProjectContext) -> dict[str, Any]:
+    try:
+        decision = read_validated_json(
+            context.repository_root,
+            context.project_dir / "review" / "decision.json",
+            "review-decision",
+        )
+        qc_path = resolve_inside(context.project_dir, cast(str, decision["qcReportPath"]))
+        qc = read_validated_json(context.repository_root, qc_path, "qc-report")
+    except (PersistenceError, UnsafePathError) as exc:
+        raise RenderError(f"Final delivery requires a valid review decision: {exc}") from exc
+    if (
+        decision["projectId"] != context.project["projectId"]
+        or decision["action"] != "approved"
+        or any(
+            decision[key] is not None
+            for key in ("revisionPath", "revisionSha256", "invalidateFrom")
+        )
+        or qc["projectId"] != context.project["projectId"]
+        or qc["status"] != "passed"
+        or qc["counts"]["blocking"] != 0
+        or not qc_path.is_file()
+        or sha256_file(qc_path) != decision["qcReportSha256"]
+    ):
+        raise RenderError("Final delivery requires the current project to be explicitly approved.")
+    return decision
+
+
+def render_final_delivery(
+    context: ProjectContext, *, remotion_root: Path | None = None
+) -> list[str]:
+    effective_remotion_root = remotion_root or context.repository_root / "remotion"
+    _validated_approval_decision(context)
+    decision_path = context.project_dir / "review" / "decision.json"
+    decision_hash = sha256_file(decision_path)
+    input_path = build_render_input(context, remotion_root=effective_remotion_root, final=True)
+    render_input = read_validated_json(context.repository_root, input_path, "render-input")
+    executable = (
+        effective_remotion_root
+        / "node_modules"
+        / ".bin"
+        / ("remotion.cmd" if os.name == "nt" else "remotion")
+    )
+    if not executable.is_file():
+        raise RenderError(
+            "The local Remotion CLI is missing. Run `npm install` in the remotion directory."
+        )
+    workspace_output = context.project_dir / "renders" / "final.mp4"
+    remotion_temporary = workspace_output.with_name(
+        f".{workspace_output.stem}.{uuid.uuid4().hex}.remotion{workspace_output.suffix}"
+    )
+    faststart_temporary = workspace_output.with_name(
+        f".{workspace_output.stem}.{uuid.uuid4().hex}.faststart{workspace_output.suffix}"
+    )
+    config = load_config(context.repository_root, style=cast(str, context.project["mode"]))
+    arguments = [
+        str(executable),
+        "render",
+        "src/index.ts",
+        "CutMachineDraft",
+        str(remotion_temporary),
+        f"--props={input_path.resolve()}",
+        f"--public-dir={(effective_remotion_root / 'public').resolve()}",
+        "--codec=h264",
+        f"--crf={int(config['technical']['crf'])}",
+        f"--concurrency={int(config['render']['concurrency'])}",
+        "--overwrite",
+    ]
+    try:
+        try:
+            result = subprocess.run(
+                arguments,
+                cwd=effective_remotion_root,
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=int(config["render"]["timeout_seconds"]),
+            )
+        except subprocess.TimeoutExpired as exc:
+            raise RenderError("Remotion final render timed out.") from exc
+        except OSError as exc:
+            raise RenderError(f"Could not start Remotion final render: {exc}") from exc
+        _append_render_log(context.project_dir / "logs" / "final-render.jsonl", arguments, result)
+        if result.returncode != 0:
+            detail = (result.stderr or result.stdout).strip()[-4000:]
+            raise RenderError(
+                f"Remotion final render failed with exit code {result.returncode}: {detail}"
+            )
+        ffmpeg = shutil.which("ffmpeg")
+        if ffmpeg is None:
+            raise RenderError("FFmpeg is required for the final fast-start pass.")
+        run_media_command(
+            [
+                ffmpeg,
+                "-hide_banner",
+                "-nostdin",
+                "-y",
+                "-i",
+                str(remotion_temporary),
+                "-map",
+                "0:v:0",
+                "-map",
+                "0:a:0",
+                "-c",
+                "copy",
+                "-movflags",
+                "+faststart",
+                str(faststart_temporary),
+            ],
+            log_path=context.project_dir / "logs" / "final-delivery-pass.jsonl",
+            timeout_seconds=300,
+        )
+        workspace_output.parent.mkdir(parents=True, exist_ok=True)
+        os.replace(faststart_temporary, workspace_output)
+    except MediaError as exc:
+        raise RenderError(f"Final delivery fast-start pass failed: {exc}") from exc
+    finally:
+        remotion_temporary.unlink(missing_ok=True)
+        faststart_temporary.unlink(missing_ok=True)
+
+    duration, video_codec, audio_codec = _verify_render_file(
+        context, workspace_output, render_input
+    )
+    delivery = context.repository_root / "output" / f"{context.project['slug']}.mp4"
+    _atomic_copy(workspace_output, delivery)
+    digest = sha256_file(workspace_output)
+    if sha256_file(delivery) != digest:
+        raise RenderError("Final delivery copy hash does not match the workspace master.")
+    video = cast(dict[str, Any], render_input["video"])
+    record = {
+        "version": 1,
+        "projectId": context.project["projectId"],
+        "createdAt": datetime.now(UTC).isoformat(),
+        "inputPath": _relative(context, input_path),
+        "workspaceOutputPath": _relative(context, workspace_output),
+        "deliveryPath": delivery.relative_to(context.repository_root).as_posix(),
+        "sha256": digest,
+        "fps": video["fps"],
+        "width": video["width"],
+        "height": video["height"],
+        "duration": duration,
+        "videoCodec": video_codec,
+        "audioCodec": audio_codec,
+        "approvedDecisionSha256": decision_hash,
+    }
+    record_path = context.project_dir / "renders" / "delivery-record.json"
+    write_validated_json_atomic(context.repository_root, record_path, "delivery-record", record)
+    return [
+        _relative(context, input_path),
+        _relative(context, workspace_output),
+        _relative(context, record_path),
+    ]
+
+
+def validate_final_delivery(context: ProjectContext) -> None:
+    try:
+        record = read_validated_json(
+            context.repository_root,
+            context.project_dir / "renders" / "delivery-record.json",
+            "delivery-record",
+        )
+        render_input = read_validated_json(
+            context.repository_root,
+            resolve_inside(context.project_dir, cast(str, record["inputPath"])),
+            "render-input",
+        )
+        decision = _validated_approval_decision(context)
+        workspace_output = resolve_inside(
+            context.project_dir, cast(str, record["workspaceOutputPath"])
+        )
+        delivery = resolve_inside(context.repository_root, cast(str, record["deliveryPath"]))
+    except (PersistenceError, UnsafePathError) as exc:
+        raise RenderError(f"Final delivery evidence is missing or invalid: {exc}") from exc
+    expected_input = (context.project_dir / "renders" / "final-input.json").resolve()
+    expected_workspace = (context.project_dir / "renders" / "final.mp4").resolve()
+    expected_delivery = (
+        context.repository_root / "output" / f"{context.project['slug']}.mp4"
+    ).resolve()
+    if (
+        record["projectId"] != context.project["projectId"]
+        or render_input["projectId"] != context.project["projectId"]
+        or decision["projectId"] != context.project["projectId"]
+        or decision["action"] != "approved"
+        or resolve_inside(context.project_dir, cast(str, record["inputPath"])).resolve()
+        != expected_input
+        or workspace_output.resolve() != expected_workspace
+        or delivery.resolve() != expected_delivery
+        or sha256_file(context.project_dir / "review" / "decision.json")
+        != record["approvedDecisionSha256"]
+    ):
+        raise RenderError("Final delivery approval evidence is stale or project-mismatched.")
+    if (
+        not workspace_output.is_file()
+        or not delivery.is_file()
+        or sha256_file(workspace_output) != record["sha256"]
+        or sha256_file(delivery) != record["sha256"]
+    ):
+        raise RenderError("Final delivery output is missing or changed.")
+    duration, video_codec, audio_codec = _verify_render_file(
+        context, workspace_output, render_input
+    )
+    video = cast(dict[str, Any], render_input["video"])
+    if (
+        abs(duration - float(record["duration"])) > 0.01
+        or video_codec != record["videoCodec"]
+        or audio_codec != record["audioCodec"]
+        or video["width"] != record["width"]
+        or video["height"] != record["height"]
+        or video["fps"] != record["fps"]
+    ):
+        raise RenderError("Final delivery record no longer matches its media output.")

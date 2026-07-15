@@ -1,8 +1,6 @@
 # CutMachine
 
-CutMachine is a local-first, resumable AI video-editing pipeline for Urdu speech mixed with English technical terms. Python owns orchestration and validation, FFmpeg owns technical media work, and Remotion owns deterministic visual composition.
-
-The repository is being delivered one roadmap phase at a time. Phase 0 provides the safe scaffold, configuration, schemas, doctor, and Remotion foundation. Phase 1 adds immutable projects and resumable state. Phase 2 adds FFmpeg ingest and local Faster-Whisper transcription. Phase 3 adds deterministic Roman Urdu normalization and protected technical terms. Phase 4 adds conservative timeline automation and caption remapping. Phase 5 adds the validated Cowork planning contract and offline baseline plan.
+CutMachine is a complete local-first, resumable AI video-editing pipeline for Urdu speech mixed with English technical terms. Python owns orchestration and validation, FFmpeg owns technical media work, and Remotion owns deterministic visual composition. The v2.0 roadmap is complete through final delivery, explicit review learning, and a modern local editor/review surface.
 
 ## Setup
 
@@ -44,7 +42,7 @@ Intentionally invalidate a stage and all of its downstream dependents:
 python cutmachine.py rerun video --from validated
 ```
 
-A successful Phase 9 run stops at `awaiting_review` with technical finishing, automated QC, and a read-only local review package complete. Original source files and transcripts are never modified. Persisted project paths are relative, state writes are atomic, and concurrent project mutations are locked.
+A successful run stops at `awaiting_review` with technical finishing, automated QC, and a modern read-only local editor at `review/index.html`. Original source files and transcripts are never modified. Persisted project paths are relative, state writes are atomic, and concurrent project mutations are locked.
 
 Phase 2 creates:
 
@@ -120,7 +118,27 @@ python cutmachine.py approve video --note "Reviewed and approved"
 python cutmachine.py request-revision video planning\revision.json --note "Change caption emphasis"
 ```
 
-Revision JSON must use the existing allowlisted `plan-revision` contract and a safe project-relative path. A revision invalidates `plan_ready` and downstream stages while preserving the source timeline and transcript evidence.
+Approval automatically renders and verifies the full-resolution master at `output/<project-slug>.mp4`, then marks the project complete. Revision JSON must use the existing allowlisted `plan-revision` contract and a safe project-relative path. A revision invalidates `plan_ready` and downstream stages while preserving the source timeline and transcript evidence.
+
+Phase 10 adds the versioned visual design system: six caption presets, typed title/information/data/screen/layout components, bundled Urdu typography, responsive safe zones, bounded camera and transition treatments, and conservative color presets. Unsupported components, props, effects, paths, or executable fields are rejected before rendering.
+
+Phase 11 adds an explicit, auditable local learning loop and final delivery:
+
+- immutable hash-bound accepted/rejected review events under `workspace/.learning/`
+- bounded asset preference tie-breaking after license and relevance gates
+- approved context-aware caption corrections without changing word IDs or timing
+- explicitly activated per-mode style tuning that can only reduce effect budgets
+- monotonic stage timing and validated cache-hit evidence in `analysis/performance-report.json`
+- `renders/final.mp4`, `renders/delivery-record.json`, and the verified `output/<project-slug>.mp4` master
+
+Optional structured feedback is project-relative and validated by `schemas/learning-feedback.schema.json`. Pass it with the same explicit human decision:
+
+```powershell
+python cutmachine.py approve video --feedback review\learning-feedback.json
+python cutmachine.py request-revision video planning\revision.json --feedback review\learning-feedback.json
+```
+
+Learning is never inferred from silence. Invalid, stale, duplicated, tampered, absolute, or traversal-based feedback is rejected; corrupt derived profiles fall back to deterministic defaults.
 
 The first transcription run downloads the selected Faster-Whisper model when it is not cached. CUDA is attempted on suitable hardware; failures retry once with the configured CPU int8 fallback and record the reason.
 

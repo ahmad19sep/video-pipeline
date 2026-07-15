@@ -33,7 +33,7 @@ def test_cli_routes_explicit_phase9_review_decisions(
     capsys: object,
     monkeypatch: object,
 ) -> None:
-    calls: list[tuple[str, str | None]] = []
+    calls: list[tuple[str, str | None, str | None]] = []
 
     def result(state: str, next_stage: str) -> OrchestratorResult:
         return OrchestratorResult(
@@ -45,23 +45,43 @@ def test_cli_routes_explicit_phase9_review_decisions(
             message="review decision recorded",
         )
 
-    def approve(_root: Path, _project: Path, note: str | None) -> OrchestratorResult:
-        calls.append(("approve", note))
-        return result("approved", "final_rendered")
+    def approve(
+        _root: Path,
+        _project: Path,
+        note: str | None,
+        feedback: str | None,
+    ) -> OrchestratorResult:
+        calls.append(("approve", note, feedback))
+        return result("completed", "none")
 
     def revise(
         _root: Path,
         _project: Path,
         revision: str,
         note: str | None,
+        feedback: str | None,
     ) -> OrchestratorResult:
-        calls.append((revision, note))
+        calls.append((revision, note, feedback))
         return result("revision_requested", "plan_ready")
 
     monkeypatch.setattr(cli, "approve_project", approve)  # type: ignore[attr-defined]
     monkeypatch.setattr(cli, "request_project_revision", revise)  # type: ignore[attr-defined]
 
-    assert cli.main(["approve", "demo", "--root", str(repository), "--note", "ready"]) == 0
+    assert (
+        cli.main(
+            [
+                "approve",
+                "demo",
+                "--root",
+                str(repository),
+                "--note",
+                "ready",
+                "--feedback",
+                "planning/feedback.json",
+            ]
+        )
+        == 0
+    )
     capsys.readouterr()  # type: ignore[attr-defined]
     assert (
         cli.main(
@@ -73,10 +93,15 @@ def test_cli_routes_explicit_phase9_review_decisions(
                 str(repository),
                 "--note",
                 "change",
+                "--feedback",
+                "planning/rejected.json",
             ]
         )
         == 0
     )
     capsys.readouterr()  # type: ignore[attr-defined]
 
-    assert calls == [("approve", "ready"), ("planning/revision.json", "change")]
+    assert calls == [
+        ("approve", "ready", "planning/feedback.json"),
+        ("planning/revision.json", "change", "planning/rejected.json"),
+    ]

@@ -12,6 +12,7 @@ from cutmachine.assets import AssetError
 from cutmachine.config import ConfigError
 from cutmachine.doctor import DoctorReport, run_doctor
 from cutmachine.editorial import EditorialError
+from cutmachine.learning import LearningError
 from cutmachine.locking import ProjectLockedError
 from cutmachine.normalization import NormalizationError
 from cutmachine.orchestrator import (
@@ -73,6 +74,10 @@ def build_parser() -> argparse.ArgumentParser:
     approve = subparsers.add_parser("approve", help="Approve a QC-passed review package.")
     approve.add_argument("project", type=Path, help="Workspace project path or slug.")
     approve.add_argument("--note", help="Optional approval note.")
+    approve.add_argument(
+        "--feedback",
+        help="Optional project-relative explicit learning-feedback JSON document.",
+    )
     approve.add_argument("--json", action="store_true", help="Emit JSON instead of text.")
     approve.add_argument("--root", type=Path, default=Path.cwd(), help="Repository root.")
 
@@ -84,6 +89,10 @@ def build_parser() -> argparse.ArgumentParser:
         "revision", help="Safe project-relative path to a plan-revision JSON document."
     )
     revision.add_argument("--note", help="Optional human review note.")
+    revision.add_argument(
+        "--feedback",
+        help="Optional project-relative explicit learning-feedback JSON document.",
+    )
     revision.add_argument("--json", action="store_true", help="Emit JSON instead of text.")
     revision.add_argument("--root", type=Path, default=Path.cwd(), help="Repository root.")
     return parser
@@ -125,11 +134,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             _print_result(result, args.json)
             return 0
         if args.command == "approve":
-            result = approve_project(root, args.project, args.note)
+            result = approve_project(root, args.project, args.note, args.feedback)
             _print_result(result, args.json)
             return 0
         if args.command == "request-revision":
-            result = request_project_revision(root, args.project, args.revision, args.note)
+            result = request_project_revision(
+                root, args.project, args.revision, args.note, args.feedback
+            )
             _print_result(result, args.json)
             return 0
     except (
@@ -139,6 +150,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         PersistenceError,
         ProjectError,
         ProjectLockedError,
+        LearningError,
         NormalizationError,
         PlanningError,
         RenderError,
