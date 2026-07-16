@@ -36,6 +36,19 @@ python cutmachine.py status video
 python cutmachine.py resume video
 ```
 
+If automatic speech recognition misses or mishears the source, place an exact UTF-8
+Roman Urdu script inside the project and import it as the authoritative transcript:
+
+```powershell
+python cutmachine.py import-transcript video transcript\manual-script.txt
+```
+
+The command rejects absolute and traversal paths, preserves the original ASR document
+as `transcript/transcript.asr.json`, hashes the supplied text, keeps every supplied token
+unchanged, assigns deterministic locked timing across the detected speech span, and
+reruns normalization through review. Manual alignment is a fallback and still requires
+human timing review before approval.
+
 Intentionally invalidate a stage and all of its downstream dependents:
 
 ```powershell
@@ -82,7 +95,7 @@ Phase 6 additionally creates:
 - `renders/draft-input.json` with typed Remotion props
 - `review/draft.mp4` and `renders/draft-render.json` with verified output metadata
 
-The draft composition renders piecewise speaker video/audio, Roman Urdu word highlights, catalog graphics, bounded camera moves, and duration-preserving transitions. It supports optional validated local B-roll, music, and SFX while retaining a speaker-only fallback.
+The draft composition renders piecewise speaker video/audio, Roman Urdu word highlights, catalog graphics, bounded camera moves, and duration-preserving transitions. Energetic mode separates continuous source takes into visual beats at caption-word boundaries, so an uncut recording still receives recurring camera resets and typed graphic cutaways. It supports optional validated local B-roll and music, with code-native graphics replacing missing licensed B-roll instead of reducing the full video to captions only.
 
 Phase 7 additionally creates:
 
@@ -93,7 +106,7 @@ Phase 7 additionally creates:
 
 Add owned media beneath `assets-library/broll`, `images`, `music`, or `sfx`. An optional adjacent sidecar such as `clip.mp4.asset.json` may declare `tags`, `license`, `creator`, and `attributionRequired`; LUT sidecars also declare `colorSpace`. Unknown fields are rejected. Video/image thumbnails and audio waveforms are cached during indexing.
 
-The baseline plan places bounded sound effects automatically: an impact under the opening hook title, a whoosh under each visual transition, and sparse accents on emphasized caption words. Placement stays within the style profile's `impact_sfx_per_minute` budget and each entry is a search query resolved against your local SFX library. To make them audible, drop audio files under `assets-library/sfx` with sidecar tags matching `impact`, `whoosh`, or `pop` (for example `hit.wav.asset.json` declaring `{"tags": ["impact", "intro"], "license": "cc0"}`). Unresolved SFX are optional review warnings and the draft renders without them.
+The baseline plan places bounded sound effects automatically: an impact under the opening hook title, a whoosh under selected visual transitions, and sparse accents on emphasized caption words. Placement stays within the style profile's `impact_sfx_per_minute` budget. Before indexing, CutMachine deterministically creates a small owned 48 kHz PCM pack for the built-in `impact`, `whoosh`, and `pop` queries, then resolves and stages those files through the same hash, license, manifest, and media-probe boundary as user assets. You may add your own owned or compatible licensed sounds under `assets-library/sfx`; matching local files participate in normal relevance ranking.
 
 Pexels video search is disabled by default. To opt in, set `PEXELS_API_KEY`, enable `assets.pexels.enabled`, and keep both project and current network access enabled. Only short validated English visual queries are sent. Asset-free and offline runs continue with graphics or speaker output.
 
@@ -121,6 +134,16 @@ python cutmachine.py request-revision video planning\revision.json --note "Chang
 ```
 
 Approval automatically renders and verifies the full-resolution master at `output/<project-slug>.mp4`, then marks the project complete. Revision JSON must use the existing allowlisted `plan-revision` contract and a safe project-relative path. A revision invalidates `plan_ready` and downstream stages while preserving the source timeline and transcript evidence.
+
+While a project awaits review, three editor commands adjust it without hand-writing revision operations:
+
+```powershell
+python cutmachine.py editor-apply video planning\editor-request.json
+python cutmachine.py add-broll video D:\clips\my-demo.mp4 --tags "phone app demo"
+python cutmachine.py cowork-request video "Show a $1 vs $100 price comparison in the pricing scene"
+```
+
+`editor-apply` reads a small project-relative JSON request — `{"captionsEnabled": true, "captionPreset": "viral-punch", "brollMode": "auto", "pins": []}` — with allowlisted caption presets and B-roll modes (`auto`, `manual`, `graphics-only`, `cowork`), applies the typed operations, and rerenders back to review. `add-broll` probes, hashes, and registers an owned video or image into `assets-library/broll/user-uploads` with an owned-license sidecar; pin it to a scene by using `brollMode: "manual"` with `pins: [{"sceneId": "scene_000001", "localAssetId": "local_<id>"}]`. `cowork-request` writes the bounded handoff document `planning/cowork-editor-request.json`; when Cowork answers with `planning/cowork-editor-revision.json`, apply it through the normal `request-revision` command.
 
 Phase 10 adds the versioned visual design system: caption presets, typed title/information/data/screen/layout components, bundled Urdu typography, responsive safe zones, bounded camera and transition treatments, and conservative color presets. Unsupported components, props, effects, paths, or executable fields are rejected before rendering.
 

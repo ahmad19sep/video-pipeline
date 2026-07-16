@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any, cast
 
 from cutmachine.config import load_config
+from cutmachine.creative import build_energetic_scenes
 from cutmachine.pacing import plan_scene_cameras
 from cutmachine.paths import UnsafePathError, resolve_inside
 from cutmachine.persistence import (
@@ -151,52 +152,67 @@ def build_baseline_plan(
         }
         for word in words
     ]
-    title = " ".join(cast(str, word["text"]) for word in caption_words[:6]).strip()
-    scenes: list[dict[str, Any]] = []
     timeline_segments = cast(list[dict[str, Any]], timeline["segments"])
-    for index, segment in enumerate(timeline_segments, start=1):
-        start = float(segment["outputStart"])
-        end = float(segment["outputEnd"])
-        duration = end - start
-        graphics: list[dict[str, Any]] = []
-        if index == 1 and title and duration >= 0.5:
-            graphics.append(
+    if mode == "energetic":
+        minutes = float(timeline["outputDuration"]) / 60
+        transition_rate = float(
+            cast(dict[str, Any], style["effect_budgets"])["transitions_per_minute"]
+        )
+        transition_allowance = (
+            max(1, math.ceil(transition_rate * minutes)) if transition_rate > 0 else 0
+        )
+        scenes = build_energetic_scenes(
+            timeline_segments,
+            caption_words,
+            visual_change_target_seconds=float(style["visual_change_target_seconds"]),
+            transition_allowance=transition_allowance,
+        )
+    else:
+        title = " ".join(cast(str, word["text"]) for word in caption_words[:6]).strip()
+        scenes = []
+        for index, segment in enumerate(timeline_segments, start=1):
+            start = float(segment["outputStart"])
+            end = float(segment["outputEnd"])
+            duration = end - start
+            graphics: list[dict[str, Any]] = []
+            if index == 1 and title and duration >= 0.5:
+                graphics.append(
+                    {
+                        "id": "graphic_000001",
+                        "component": "HookTitle",
+                        "startOffset": 0.0,
+                        "endOffset": round(min(duration, 2.5), 6),
+                        "props": {"title": title[:500]},
+                    }
+                )
+            scenes.append(
                 {
-                    "id": "graphic_000001",
-                    "component": "HookTitle",
-                    "startOffset": 0.0,
-                    "endOffset": round(min(duration, 2.5), 6),
-                    "props": {"title": title[:500]},
+                    "id": f"scene_{index:06d}",
+                    "start": segment["outputStart"],
+                    "end": segment["outputEnd"],
+                    "purpose": "hook" if index == 1 else "explanation",
+                    "sourceTimelineIds": [segment["id"]],
+                    "layout": "speaker-with-title" if graphics else "speaker-fullscreen",
+                    "camera": {
+                        "mode": "static",
+                        "scaleStart": 1.0,
+                        "scaleEnd": 1.0,
+                        "focus": "face",
+                    },
+                    "colorOverride": None,
+                    "broll": {
+                        "mode": "none",
+                        "assetId": None,
+                        "query": None,
+                        "effect": "static",
+                        "fit": "cover",
+                    },
+                    "graphics": graphics,
+                    "sfx": [],
+                    "transitionOut": {"type": "clean-cut", "durationFrames": 0},
+                    "screenTreatment": None,
                 }
             )
-        scenes.append(
-            {
-                "id": f"scene_{index:06d}",
-                "start": segment["outputStart"],
-                "end": segment["outputEnd"],
-                "purpose": "hook" if index == 1 else "explanation",
-                "sourceTimelineIds": [segment["id"]],
-                "layout": "speaker-with-title" if graphics else "speaker-fullscreen",
-                "camera": {
-                    "mode": "static",
-                    "scaleStart": 1.0,
-                    "scaleEnd": 1.0,
-                    "focus": "face",
-                },
-                "colorOverride": None,
-                "broll": {
-                    "mode": "none",
-                    "assetId": None,
-                    "query": None,
-                    "effect": "static",
-                    "fit": "cover",
-                },
-                "graphics": graphics,
-                "sfx": [],
-                "transitionOut": {"type": "clean-cut", "durationFrames": 0},
-                "screenTreatment": None,
-            }
-        )
     sfx_placements = plan_scene_sfx(
         scenes,
         caption_words,
@@ -242,6 +258,7 @@ def build_baseline_plan(
             "durationInSeconds": timeline["outputDuration"],
         },
         "captions": {
+            "enabled": True,
             "language": context.project["settings"]["captionLanguage"],
             "safeZone": "shorts-default" if height >= width else "youtube-longform",
             "maxLines": captions_config["max_lines"],
@@ -663,6 +680,8 @@ def apply_revision_document(context: ProjectContext, revision: object) -> list[s
             if target is None:
                 raise PlanningError("Revision references an unknown caption word ID.")
             target["emphasis"] = operation["emphasis"]
+        elif operation_name == "set-captions-enabled":
+            updated["captions"]["enabled"] = operation["enabled"]
         elif operation_name == "set-caption-preset":
             updated["style"]["captionPreset"] = operation["captionPreset"]
         else:

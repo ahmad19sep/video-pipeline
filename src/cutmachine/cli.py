@@ -11,13 +11,18 @@ from pathlib import Path
 from cutmachine.assets import AssetError
 from cutmachine.config import ConfigError
 from cutmachine.doctor import DoctorReport, run_doctor
+from cutmachine.editor import EditorError
 from cutmachine.editorial import EditorialError
 from cutmachine.learning import LearningError
 from cutmachine.locking import ProjectLockedError
 from cutmachine.normalization import NormalizationError
 from cutmachine.orchestrator import (
     OrchestratorResult,
+    add_project_owned_broll,
+    apply_project_editor_settings,
     approve_project,
+    create_project_cowork_request,
+    import_project_transcript,
     project_status,
     request_project_revision,
     rerun_from,
@@ -30,6 +35,7 @@ from cutmachine.project import MODES, ProjectError
 from cutmachine.rendering import RenderError
 from cutmachine.review import ReviewError
 from cutmachine.state import STAGES, StateTransitionError
+from cutmachine.transcription import TranscriptError
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -64,6 +70,55 @@ def build_parser() -> argparse.ArgumentParser:
     status.add_argument("project", type=Path, help="Workspace project path or slug.")
     status.add_argument("--json", action="store_true", help="Emit JSON instead of text.")
     status.add_argument("--root", type=Path, default=Path.cwd(), help="Repository root.")
+
+    transcript = subparsers.add_parser(
+        "import-transcript",
+        help=(
+            "Import and align an authoritative project-relative plain or timestamped "
+            "Roman Urdu text file."
+        ),
+    )
+    transcript.add_argument("project", type=Path, help="Workspace project path or slug.")
+    transcript.add_argument(
+        "transcript", help="Safe project-relative path to a UTF-8 .txt transcript."
+    )
+    transcript.add_argument("--json", action="store_true", help="Emit JSON instead of text.")
+    transcript.add_argument("--root", type=Path, default=Path.cwd(), help="Repository root.")
+
+    editor_apply = subparsers.add_parser(
+        "editor-apply",
+        help=(
+            "Apply validated local editor settings (captions on/off, caption preset, "
+            "B-roll mode, owned pins) from a project-relative JSON file and rerender."
+        ),
+    )
+    editor_apply.add_argument("project", type=Path, help="Workspace project path or slug.")
+    editor_apply.add_argument(
+        "settings", help="Safe project-relative path to a JSON editor-settings request."
+    )
+    editor_apply.add_argument("--json", action="store_true", help="Emit JSON instead of text.")
+    editor_apply.add_argument("--root", type=Path, default=Path.cwd(), help="Repository root.")
+
+    add_broll = subparsers.add_parser(
+        "add-broll",
+        help="Register an owned local video or image as reusable tagged B-roll.",
+    )
+    add_broll.add_argument("project", type=Path, help="Workspace project path or slug.")
+    add_broll.add_argument("file", type=Path, help="Path to the owned video or image file.")
+    add_broll.add_argument(
+        "--tags", default="", help="Space-separated descriptive tags for search ranking."
+    )
+    add_broll.add_argument("--json", action="store_true", help="Emit JSON instead of text.")
+    add_broll.add_argument("--root", type=Path, default=Path.cwd(), help="Repository root.")
+
+    cowork_request = subparsers.add_parser(
+        "cowork-request",
+        help="Write a bounded Cowork editor request describing a creative change.",
+    )
+    cowork_request.add_argument("project", type=Path, help="Workspace project path or slug.")
+    cowork_request.add_argument("instruction", help="Plain-text creative instruction for Cowork.")
+    cowork_request.add_argument("--json", action="store_true", help="Emit JSON instead of text.")
+    cowork_request.add_argument("--root", type=Path, default=Path.cwd(), help="Repository root.")
 
     rerun = subparsers.add_parser("rerun", help="Invalidate a stage and its dependents.")
     rerun.add_argument("project", type=Path, help="Workspace project path or slug.")
@@ -129,6 +184,24 @@ def main(argv: Sequence[str] | None = None) -> int:
             result = project_status(root, args.project)
             _print_result(result, args.json)
             return 0
+        if args.command == "import-transcript":
+            result = import_project_transcript(root, args.project, args.transcript)
+            _print_result(result, args.json)
+            return 0
+        if args.command == "editor-apply":
+            result = apply_project_editor_settings(
+                root, args.project, settings_relative=args.settings
+            )
+            _print_result(result, args.json)
+            return 0
+        if args.command == "add-broll":
+            result = add_project_owned_broll(root, args.project, args.file, args.tags)
+            _print_result(result, args.json)
+            return 0
+        if args.command == "cowork-request":
+            result = create_project_cowork_request(root, args.project, args.instruction)
+            _print_result(result, args.json)
+            return 0
         if args.command == "rerun":
             result = rerun_from(root, args.project, args.from_stage)
             _print_result(result, args.json)
@@ -153,9 +226,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         LearningError,
         NormalizationError,
         PlanningError,
+        EditorError,
         RenderError,
         ReviewError,
         StateTransitionError,
+        TranscriptError,
     ) as exc:
         print(f"CutMachine error: {exc}", file=sys.stderr)
         return 1

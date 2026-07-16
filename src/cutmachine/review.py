@@ -242,6 +242,8 @@ def _stage_asset_previews(
 def _caption_overflow(render_input: dict[str, Any]) -> bool:
     video = cast(dict[str, Any], render_input["video"])
     captions = cast(dict[str, Any], render_input["captions"])
+    if not bool(captions["enabled"]):
+        return False
     words = cast(list[dict[str, Any]], captions["words"])
     maximum = int(cast(dict[str, Any], captions["wordsPerPage"])["max"])
     width, height = int(video["width"]), int(video["height"])

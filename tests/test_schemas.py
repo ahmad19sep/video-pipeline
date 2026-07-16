@@ -31,6 +31,9 @@ ROOT = Path(__file__).resolve().parents[1]
         "asset-candidates",
         "asset-ranking",
         "asset-cache",
+        "asset-pins",
+        "editor-settings",
+        "cowork-editor-request",
         "preprocess-record",
         "render-input",
         "draft-render",
@@ -72,6 +75,7 @@ def test_edit_plan_rejects_absolute_source_path() -> None:
             "durationInSeconds": 10,
         },
         "captions": {
+            "enabled": True,
             "language": "roman-urdu",
             "safeZone": "shorts-default",
             "maxLines": 2,

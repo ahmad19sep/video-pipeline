@@ -10,6 +10,7 @@ node_modules/
 remotion/node_modules/
 remotion/out/
 remotion/build/
+remotion/public/cutmachine/
 .env
 workspace/*
 !workspace/.gitkeep
@@ -19,3 +20,4 @@ inbox/*
 !inbox/.gitkeep
 assets-library/**/[^.]*
 tmp/
+.test-tmp/

@@ -40,8 +40,8 @@
         "display": {"type": "string", "minLength": 1},
         "language": {"type": "string", "minLength": 2},
         "confidence": {"type": "number", "minimum": 0, "maximum": 1},
-        "source": {"const": "faster-whisper"},
-        "normalizationSource": {"const": "raw-transcript"},
+        "source": {"enum": ["faster-whisper", "manual-script"]},
+        "normalizationSource": {"enum": ["raw-transcript", "manual-script"]},
         "lockedTiming": {"const": true}
       }
     },
@@ -56,7 +56,10 @@
         "effective": {"$ref": "#/$defs/modelSettings"},
         "fallbackReason": {"type": ["string", "null"]},
         "wordTimestamps": {"const": true},
-        "vadEnabled": {"type": "boolean"}
+        "vadEnabled": {"type": "boolean"},
+        "manualScriptPath": {"$ref": "#/$defs/safeRelativePath"},
+        "manualScriptSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "alignmentMethod": {"enum": ["weighted-script-duration", "timestamped-script-cues"]}
       }
     },
     "modelSettings": {
@@ -79,4 +82,3 @@
     }
   }
 }
-

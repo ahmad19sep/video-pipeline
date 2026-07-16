@@ -7,6 +7,16 @@ from pathlib import Path
 from typing import Any
 
 from cutmachine.assets import AssetError, prepare_assets, validate_asset_readiness
+from cutmachine.editor import (
+    EditorError,
+    cowork_revision_relative,
+    load_editor_request,
+    prepare_editor_mutation,
+    register_owned_broll,
+    stage_editor_upload,
+    write_cowork_request,
+    write_editor_documents,
+)
 from cutmachine.editorial import (
     EditorialError,
     analyze_project,
@@ -28,7 +38,12 @@ from cutmachine.normalization import (
     normalize_project,
     validate_normalized_outputs,
 )
-from cutmachine.planning import PlanningError, generate_plan, validate_plan_outputs
+from cutmachine.planning import (
+    PlanningError,
+    apply_revision_document,
+    generate_plan,
+    validate_plan_outputs,
+)
 from cutmachine.project import (
     ProjectContext,
     create_project,
@@ -56,6 +71,7 @@ from cutmachine.review import (
 from cutmachine.state import ProjectState
 from cutmachine.transcription import (
     TranscriptError,
+    import_manual_transcript,
     transcribe_project,
     validate_transcript_outputs,
 )
@@ -432,6 +448,116 @@ def rerun_from(repository_root: Path, project: Path, stage: str) -> Orchestrator
         context,
         state,
         f"Invalidated {stage} and all downstream stages.",
+    )
+
+
+def import_project_transcript(
+    repository_root: Path, project: Path, transcript_relative: str
+) -> OrchestratorResult:
+    context = open_project(repository_root, project)
+    with ProjectLock(context.project_dir):
+        verify_project(context)
+        state = context.state_store.load()
+        state.recover_interrupted()
+        if state.stage("transcribed").status != "completed":
+            raise TranscriptError(
+                "Manual transcript import requires a completed transcription stage."
+            )
+        if state.stage("approved").status == "completed":
+            raise TranscriptError("Cannot replace a transcript after project approval.")
+        artifacts = import_manual_transcript(context, transcript_relative)
+        state.stage("transcribed").artifacts = artifacts
+        if state.stage("awaiting_review").status == "completed":
+            state.request_revision(
+                "normalized", "Imported authoritative manual Roman Urdu transcript."
+            )
+        else:
+            state.invalidate_from("normalized")
+        context.state_store.save(state)
+        state = _run_registered_stages(context, state)
+        write_performance_report(context)
+    return _result(
+        context,
+        state,
+        "Manual Roman Urdu transcript imported, aligned, and rerendered.",
+    )
+
+
+def apply_project_editor_settings(
+    repository_root: Path,
+    project: Path,
+    payload: object = None,
+    *,
+    settings_relative: str | None = None,
+) -> OrchestratorResult:
+    context = open_project(repository_root, project)
+    with ProjectLock(context.project_dir):
+        verify_project(context)
+        state = context.state_store.load()
+        state = _verify_completed_pipeline(context, state)
+        if state.stage("awaiting_review").status != "completed":
+            raise EditorError("Editor changes require a valid project awaiting review.")
+        if settings_relative is not None:
+            payload = load_editor_request(context, settings_relative)
+        mutation = prepare_editor_mutation(context, payload)
+        if mutation.invalidate_from is None:
+            write_editor_documents(context, mutation)
+            return _result(context, state, "Editor settings were already applied.")
+        state.request_revision(
+            mutation.invalidate_from,
+            "Validated local editor settings changed.",
+        )
+        context.state_store.save(state)
+        write_editor_documents(context, mutation)
+        if mutation.revision is not None:
+            apply_revision_document(context, mutation.revision)
+        state = _run_registered_stages(context, state)
+        write_performance_report(context)
+    return _result(
+        context,
+        state,
+        "Editor settings applied, rerendered, and returned to review.",
+    )
+
+
+def add_project_owned_broll(
+    repository_root: Path,
+    project: Path,
+    source: Path,
+    tags: str,
+) -> OrchestratorResult:
+    context = open_project(repository_root, project)
+    with ProjectLock(context.project_dir):
+        verify_project(context)
+        state = context.state_store.load()
+        staged = stage_editor_upload(context.repository_root, source)
+        try:
+            asset = register_owned_broll(context, staged, source.name, tags)
+        finally:
+            staged.unlink(missing_ok=True)
+    return _result(
+        context,
+        state,
+        f"Owned B-roll registered as {asset['id']} with tags {', '.join(asset['tags'])}. "
+        "Pin it to a scene with editor-apply in manual mode.",
+    )
+
+
+def create_project_cowork_request(
+    repository_root: Path,
+    project: Path,
+    instruction: str,
+) -> OrchestratorResult:
+    context = open_project(repository_root, project)
+    with ProjectLock(context.project_dir):
+        verify_project(context)
+        state = context.state_store.load()
+        artifacts = write_cowork_request(context, instruction)
+    return _result(
+        context,
+        state,
+        f"Cowork editor request written to {artifacts[0]}. After Cowork writes "
+        f"{cowork_revision_relative()}, apply it with request-revision.",
     )
 
 

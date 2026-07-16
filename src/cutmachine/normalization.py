@@ -457,6 +457,16 @@ def normalize_project(
     corrections = approved_caption_corrections(context.repository_root)
     words = []
     for index, word in enumerate(raw_words):
+        if word["source"] == "manual-script":
+            words.append(
+                {
+                    **word,
+                    "display": word["raw"],
+                    "confidence": 1.0,
+                    "normalizationSource": "manual-script",
+                }
+            )
+            continue
         context_terms = {
             _split_boundaries(cast(str, raw_words[item]["raw"]))[1].casefold()
             for item in range(max(0, index - 2), min(len(raw_words), index + 3))
@@ -536,7 +546,7 @@ def normalize_project(
         "lowConfidenceThreshold": threshold,
         "counts": {
             "words": len(words),
-            "preserved": counts["preserved"],
+            "preserved": counts["preserved"] + counts["manual-script"],
             "technicalGlossary": counts["technical-glossary"],
             "approvedCorrections": counts["approved-correction"],
             "localLexicon": counts["local-lexicon"],
@@ -595,7 +605,7 @@ def validate_normalized_outputs(context: ProjectContext) -> None:
     counts = Counter(cast(str, word["normalizationSource"]) for word in normalized_words)
     expected_counts = {
         "words": len(normalized_words),
-        "preserved": counts["preserved"],
+        "preserved": counts["preserved"] + counts["manual-script"],
         "technicalGlossary": counts["technical-glossary"],
         "approvedCorrections": counts["approved-correction"],
         "localLexicon": counts["local-lexicon"],

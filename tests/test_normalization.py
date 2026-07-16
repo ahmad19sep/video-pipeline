@@ -12,6 +12,7 @@ from cutmachine.normalization import (
 )
 from cutmachine.persistence import write_validated_json_atomic
 from cutmachine.project import ProjectContext
+from cutmachine.transcription import import_manual_transcript
 
 
 def _write_raw_transcript(
@@ -132,6 +133,27 @@ def test_urls_numbers_roman_tokens_and_glossary_aliases_are_preserved(
         "Roman",
         "OpenAI",
     ]
+
+
+def test_manual_roman_transcript_bypasses_word_rewriting(
+    ingested_context: ProjectContext,
+) -> None:
+    script = ingested_context.project_dir / "transcript" / "manual-script.txt"
+    script.parent.mkdir(parents=True, exist_ok=True)
+    exact = "Us raat jab us ne khudkushi ki, yani suicide kiya."
+    script.write_text(exact, encoding="utf-8")
+    import_manual_transcript(ingested_context, "transcript/manual-script.txt")
+
+    normalize_project(ingested_context)
+    validate_normalized_outputs(ingested_context)
+    document = json.loads(
+        (ingested_context.project_dir / "transcript" / "transcript.roman.json").read_text(
+            encoding="utf-8"
+        )
+    )
+
+    assert " ".join(word["display"] for word in document["words"]) == exact
+    assert {word["normalizationSource"] for word in document["words"]} == {"manual-script"}
 
 
 @pytest.mark.parametrize("unsafe_path", ["../outside.json", "D:/outside.json"])

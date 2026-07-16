@@ -402,6 +402,17 @@ def _validate_audio_targets(audio: dict[str, Any]) -> None:
         raise TechnicalError("Mastered audio exceeds the true-peak tolerance.")
 
 
+def build_audio_mastering_filter(target_lufs: float, target_peak: float) -> str:
+    limiter = 10 ** (target_peak / 20)
+    return (
+        "highpass=f=70,equalizer=f=3000:t=q:w=1:g=1.5,"
+        "acompressor=threshold=-18dB:ratio=2:attack=20:release=200,"
+        f"loudnorm=I={target_lufs}:TP={target_peak}:LRA=11,"
+        f"alimiter=limit={limiter:.6f}:level=false,"
+        "aresample=48000"
+    )
+
+
 def _lut_filter_path(path: Path) -> str:
     value = path.resolve().as_posix().replace("\\", "/")
     return value.replace(":", "\\:").replace("'", "\\'")
@@ -548,14 +559,7 @@ def finish_project(
     video_filters, operations, complex_filter = _video_filters(context, reframe, adjustments, lut)
     target_lufs = float(cast(dict[str, Any], plan["globalAudio"])["targetLufs"])
     target_peak = float(cast(dict[str, Any], plan["globalAudio"])["truePeakDb"])
-    limiter = 10 ** (target_peak / 20)
-    audio_filter = (
-        "highpass=f=70,equalizer=f=3000:t=q:w=1:g=1.5,"
-        "acompressor=threshold=-18dB:ratio=2:attack=20:release=200,"
-        f"loudnorm=I={target_lufs}:TP={target_peak}:LRA=11,"
-        f"alimiter=limit={limiter:.6f},"
-        "aresample=48000"
-    )
+    audio_filter = build_audio_mastering_filter(target_lufs, target_peak)
     arguments = [
         _executable("ffmpeg"),
         "-hide_banner",

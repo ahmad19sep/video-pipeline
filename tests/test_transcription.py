@@ -12,6 +12,7 @@ from cutmachine.project import ProjectContext
 from cutmachine.transcription import (
     ModelSettings,
     TranscriptError,
+    import_manual_transcript,
     select_model_settings,
     transcribe_project,
     validate_transcript_outputs,
@@ -184,6 +185,171 @@ def test_reversed_word_timestamps_are_rejected(ingested_context: ProjectContext)
             model_factory=lambda _settings: FakeModel(segments),
             gpu_memory_mb=0,
         )
+
+
+def test_zero_length_word_timestamp_gets_minimal_deterministic_duration(
+    ingested_context: ProjectContext,
+) -> None:
+    segments = [
+        FakeSegment(
+            0.1,
+            0.9,
+            "har giz nahi",
+            [
+                FakeWord(0.1, 0.3, "har"),
+                FakeWord(0.3, 0.3, "giz"),
+                FakeWord(0.31, 0.6, "nahi"),
+            ],
+        )
+    ]
+
+    transcribe_project(
+        ingested_context,
+        model_factory=lambda _settings: FakeModel(segments),
+        gpu_memory_mb=0,
+    )
+    document = json.loads(
+        (ingested_context.project_dir / "transcript" / "transcript.raw.json").read_text(
+            encoding="utf-8"
+        )
+    )
+
+    assert document["words"][1]["start"] == 0.3
+    assert document["words"][1]["end"] == 0.301
+    validate_transcript_outputs(ingested_context)
+
+
+def test_manual_roman_transcript_preserves_exact_words_and_source_hash(
+    ingested_context: ProjectContext,
+) -> None:
+    script = ingested_context.project_dir / "transcript" / "manual-script.txt"
+    script.parent.mkdir(parents=True, exist_ok=True)
+    script.write_text(
+        "Us raat ChatGPT se baat hui.\n\nThank you for watching.",
+        encoding="utf-8",
+    )
+
+    artifacts = import_manual_transcript(ingested_context, "transcript/manual-script.txt")
+    validate_transcript_outputs(ingested_context)
+    document = json.loads(
+        (ingested_context.project_dir / "transcript" / "transcript.raw.json").read_text(
+            encoding="utf-8"
+        )
+    )
+
+    assert artifacts == [
+        "transcript/transcript.raw.json",
+        "transcript/manual-script.txt",
+    ]
+    assert [word["raw"] for word in document["words"]] == [
+        "Us",
+        "raat",
+        "ChatGPT",
+        "se",
+        "baat",
+        "hui.",
+        "Thank",
+        "you",
+        "for",
+        "watching.",
+    ]
+    assert {word["source"] for word in document["words"]} == {"manual-script"}
+    assert document["segments"][0]["text"] == "Us raat ChatGPT se baat hui."
+    assert document["segments"][1]["text"] == "Thank you for watching."
+    assert document["provenance"]["alignmentMethod"] == "weighted-script-duration"
+
+    script.write_text("changed", encoding="utf-8")
+    with pytest.raises(TranscriptError, match="changed after import"):
+        validate_transcript_outputs(ingested_context)
+
+
+def test_timestamped_manual_transcript_uses_cues_without_captioning_headers(
+    ingested_context: ProjectContext,
+) -> None:
+    script = ingested_context.project_dir / "transcript" / "timestamped-script.txt"
+    script.parent.mkdir(parents=True, exist_ok=True)
+    script.write_text(
+        "**0:00\u20130:01**\nUs raat ChatGPT se baat hui.\n\n"
+        "**0:01\u2013End**\nThank you for watching.",
+        encoding="utf-8",
+    )
+
+    import_manual_transcript(ingested_context, "transcript/timestamped-script.txt")
+    validate_transcript_outputs(ingested_context)
+    document = json.loads(
+        (ingested_context.project_dir / "transcript" / "transcript.raw.json").read_text(
+            encoding="utf-8"
+        )
+    )
+
+    assert [word["raw"] for word in document["words"]] == [
+        "Us",
+        "raat",
+        "ChatGPT",
+        "se",
+        "baat",
+        "hui.",
+        "Thank",
+        "you",
+        "for",
+        "watching.",
+    ]
+    assert document["segments"][0]["start"] == 0
+    assert document["segments"][0]["end"] == 1
+    assert document["segments"][1]["start"] == 1
+    assert document["segments"][1]["end"] == document["durationSeconds"]
+    assert document["provenance"]["alignmentMethod"] == "timestamped-script-cues"
+    assert all("**" not in word["raw"] for word in document["words"])
+
+
+@pytest.mark.parametrize(
+    ("text", "message"),
+    [
+        (
+            "**0:00\u20130:02**\nFirst cue.\n**0:01\u2013End**\nSecond cue.",
+            "overlap",
+        ),
+        ("**0:01\u20130:00**\nReverse cue.", "positive duration"),
+        ("**0:00\u20130:03**\nToo long.", "exceeds media duration"),
+        (
+            "**0:00\u2013End**\nNot final.\n**0:01\u20130:02**\nLater cue.",
+            "End is allowed only",
+        ),
+        ("**0:00\u20130:01**\n**0:01\u2013End**\nMissing first cue.", "empty cue"),
+        ("Text before cue.\n**0:00\u2013End**\nLater cue.", "must begin with a cue"),
+        ("**0:00 to End**\nMalformed cue.", "Malformed"),
+    ],
+)
+def test_timestamped_manual_transcript_rejects_invalid_cues(
+    ingested_context: ProjectContext, text: str, message: str
+) -> None:
+    script = ingested_context.project_dir / "transcript" / "invalid-timestamped.txt"
+    script.parent.mkdir(parents=True, exist_ok=True)
+    script.write_text(text, encoding="utf-8")
+
+    with pytest.raises(TranscriptError, match=message):
+        import_manual_transcript(ingested_context, "transcript/invalid-timestamped.txt")
+
+
+def test_timestamped_manual_transcript_rejects_persisted_cue_tampering(
+    ingested_context: ProjectContext,
+) -> None:
+    script = ingested_context.project_dir / "transcript" / "timestamped-script.txt"
+    script.parent.mkdir(parents=True, exist_ok=True)
+    script.write_text("**0:00\u2013End**\nExact supplied words.", encoding="utf-8")
+    import_manual_transcript(ingested_context, "transcript/timestamped-script.txt")
+    raw = ingested_context.project_dir / "transcript" / "transcript.raw.json"
+    document = json.loads(raw.read_text(encoding="utf-8"))
+    document["segments"][0]["start"] = 0.1
+    raw.write_text(json.dumps(document), encoding="utf-8")
+
+    with pytest.raises(TranscriptError, match="cue timing changed"):
+        validate_transcript_outputs(ingested_context)
+
+
+def test_manual_transcript_rejects_unsafe_path(ingested_context: ProjectContext) -> None:
+    with pytest.raises(TranscriptError, match="Unsafe manual transcript path"):
+        import_manual_transcript(ingested_context, "../manual-script.txt")
 
 
 def test_validation_rejects_non_finite_persisted_segment(

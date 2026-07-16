@@ -8,11 +8,20 @@ import pytest
 from cutmachine.project import ProjectContext, sha256_file
 from cutmachine.technical import (
     TechnicalError,
+    build_audio_mastering_filter,
     build_reframe_analysis,
     choose_color_adjustments,
     classify_scenes,
     resolve_lut,
 )
+
+
+def test_audio_mastering_limiter_preserves_true_peak_headroom() -> None:
+    audio_filter = build_audio_mastering_filter(-14.0, -1.0)
+
+    assert "loudnorm=I=-14.0:TP=-1.0" in audio_filter
+    assert "alimiter=limit=0.891251:level=false" in audio_filter
+    assert audio_filter.endswith("aresample=48000")
 
 
 def _config() -> dict[str, Any]:

@@ -76,6 +76,7 @@ def _render_document(component: str = "HookTitle") -> dict[str, Any]:
             }
         ],
         "captions": {
+            "enabled": True,
             "preset": "roman-word-highlight",
             "language": "roman-urdu",
             "safeZone": "shorts-default",

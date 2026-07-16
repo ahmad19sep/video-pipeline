@@ -69,6 +69,7 @@
       "additionalProperties": false,
       "required": ["language", "safeZone", "maxLines", "wordsPerPage", "words"],
       "properties": {
+        "enabled": {"type": "boolean"},
         "language": {"enum": ["roman-urdu", "urdu-script", "english"]},
         "safeZone": {"enum": ["shorts-default", "reels-default", "tiktok-default", "youtube-longform", "custom"]},
         "maxLines": {"type": "integer", "minimum": 1, "maximum": 3},

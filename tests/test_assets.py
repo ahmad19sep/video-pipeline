@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 from pathlib import Path
 from typing import Any
 
@@ -220,6 +221,10 @@ def test_pexels_adapter_sends_only_bounded_query_and_validates_urls() -> None:
 
 
 def test_empty_local_index_is_valid(repository: Path) -> None:
+    shutil.rmtree(
+        repository / "assets-library" / "sfx" / "cutmachine-generated",
+        ignore_errors=True,
+    )
     index = index_local_assets(repository, repository / "assets-library")
     assert index["assets"] == []
 

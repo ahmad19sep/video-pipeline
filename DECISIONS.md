@@ -191,3 +191,27 @@ Add `set-scene-graphic` (add or replace one graphic matched by ID) and `remove-s
 ## 2026-07-16 - ADR-0048: Bounded attention pacing from editing psychology
 
 Encode three evidence-backed editing principles as deterministic, budgeted data rather than free-form effects: salience at the open (a fast punch-in on the hook scene), attention reset (imperceptible alternating slow zooms only on scenes that outlast the style's visual-change target), and habituation avoidance (no repeated identical move back to back). Remotion shapes each camera mode's motion curve (fast-settle punch-ins and reframes, full-scene eased zooms) while scale stays within 1.0-1.06 and the camera budget formula matches the plan validator. Add the intensity-scaled `teal-orange` grade to the existing bounded CSS preset family.
+
+## 2026-07-16 - ADR-0049: Manual transcripts are explicit immutable fallbacks
+
+When Faster-Whisper omits or materially misrecognizes speech, allow the user to import an exact project-relative Roman Urdu text file instead of silently guessing corrections. Preserve the original ASR transcript as a validated snapshot, hash-bind the manual source, keep every supplied token unchanged, and create new sequential locked timing identifiers through deterministic weighted alignment. Invalidate normalization and downstream artifacts only, rerender to `awaiting_review`, and never accept arbitrary, absolute, traversal, oversized, mixed-source, tampered, or post-approval transcript replacement.
+
+## 2026-07-16 - ADR-0050: Creative beats are independent of source cuts
+
+Do not equate one retained source-timeline range with one visual scene. Split long output ranges at deterministic caption-word boundaries into gap-free creative beats, retain every overlapping authoritative timeline ID, and apply camera, graphic, transition, and asset decisions to those beats without changing media cuts or caption identity/timing. This permits attention pacing across a continuous talking-head take while preserving the immutable editorial timeline.
+
+## 2026-07-16 - ADR-0051: Owned generated SFX are the local-first audio floor
+
+Before local asset indexing, deterministically synthesize a small fixed PCM WAV pack for the allowlisted baseline impact, whoosh, and pop queries. Store it under a reserved CutMachine-generated asset-library directory with owned-license sidecars, validate and rank it through the same hash, media-probe, relevance, manifest, and staging boundaries as user assets, and never overwrite unrelated user media. Optional provider SFX may still supersede only according to the existing tier rules; speech remains dominant through bounded negative gains.
+
+## 2026-07-16 - ADR-0052: User cue ranges override inferred manual alignment
+
+When an authoritative manual transcript contains strict timestamp headers, treat each validated range as the segment timing authority, exclude headers from spoken tokens, and distribute exact words deterministically only within that range. Resolve `End` against validated media duration; reject mixed, missing, overlapping, reversed, or out-of-range cues. Preserve the existing whole-speech weighted alignment for plain scripts and hash-bind/reparse either format during resume validation.
+
+## 2026-07-16 - ADR-0053: Interactive controls wrap but do not replace the review boundary
+
+Keep `review/index.html` an immutable, script-free evidence package and add the requested interactive workflow as a separate loopback-only controller. Browser actions translate only into allowlisted caption revisions, validated project-bound B-roll pins, or fixed Cowork handoff files; they never inject code, shell commands, arbitrary paths, or unvalidated plan content. User-pinned owned media may override automatic relevance ranking only after extension, size, probe, hash, license, and local-library validation.
+
+## 2026-07-16 - ADR-0054: Editor controls ship CLI-first
+
+Expose the validated editor workflow through three CLI commands before any browser surface exists: `editor-apply` reads a bounded project-relative JSON settings request (captions on/off, allowlisted caption preset, B-roll mode, owned pins) and rerenders through normal QC; `add-broll` stages an explicit user file through the controlled upload directory into the owned asset library; `cowork-request` writes the fixed Cowork handoff document whose typed revision returns through the existing `request-revision` boundary. A future loopback browser UI may call the same orchestrator functions but adds no new mutation paths.

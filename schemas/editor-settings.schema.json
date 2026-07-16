@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cutmachine.local/schemas/editor-settings-v1.schema.json",
+  "title": "CutMachine Local Editor Settings v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "projectId", "updatedAt", "captionsEnabled", "captionPreset", "brollMode", "autoQueries", "pins"],
+  "properties": {
+    "version": {"const": 1},
+    "projectId": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"},
+    "updatedAt": {"type": "string", "format": "date-time"},
+    "captionsEnabled": {"type": "boolean"},
+    "captionPreset": {"enum": ["roman-word-highlight", "clean-two-line", "hook", "definition", "question", "viral-punch", "boxed-keyword", "urdu-script"]},
+    "brollMode": {"enum": ["auto", "manual", "graphics-only", "cowork"]},
+    "autoQueries": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["sceneId", "query"],
+        "properties": {
+          "sceneId": {"type": "string", "pattern": "^scene_[0-9]{6}$"},
+          "query": {"type": ["string", "null"], "minLength": 1, "maxLength": 120}
+        }
+      }
+    },
+    "pins": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["sceneId", "localAssetId"],
+        "properties": {
+          "sceneId": {"type": "string", "pattern": "^scene_[0-9]{6}$"},
+          "localAssetId": {"type": "string", "pattern": "^local_[a-f0-9]{16}$"}
+        }
+      }
+    }
+  }
+}

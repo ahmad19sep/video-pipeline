@@ -152,6 +152,7 @@ export type RenderInput = {
   };
   timelineSegments: TimelineSegment[];
   captions: {
+    enabled: boolean;
     preset: CaptionPreset;
     language: "roman-urdu" | "urdu-script" | "english";
     safeZone:

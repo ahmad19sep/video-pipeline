@@ -87,6 +87,9 @@ export const validateRenderInput = (input: RenderInput): RenderInput => {
   ) {
     throw new Error("Unsupported style or caption preset");
   }
+  if (typeof input.captions.enabled !== "boolean") {
+    throw new Error("Caption visibility must be boolean");
+  }
   const font = input.design.font;
   if (
     font.path !== null &&

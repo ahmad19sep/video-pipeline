@@ -17,6 +17,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, cast
 
+from cutmachine.builtin_assets import ensure_builtin_sfx
 from cutmachine.config import load_config
 from cutmachine.learning import asset_preference_scores
 from cutmachine.media import MediaError, probe_media, run_media_command
@@ -422,6 +423,67 @@ def local_candidates(requests: dict[str, Any], index: dict[str, Any]) -> list[di
             if _kind_matches(cast(str, request["kind"]), cast(str, asset["type"])):
                 values.append(_candidate_for_local(request, asset))
     return values
+
+
+def _asset_pins(
+    context: ProjectContext,
+    plan: dict[str, Any],
+    index: dict[str, Any],
+) -> dict[str, dict[str, Any]]:
+    path = context.project_dir / "planning" / "asset-pins.json"
+    if not path.is_file():
+        return {}
+    try:
+        document = read_validated_json(context.repository_root, path, "asset-pins")
+    except PersistenceError as exc:
+        raise AssetError(f"Owned B-roll pins are invalid: {exc}") from exc
+    if document["projectId"] != context.project["projectId"]:
+        raise AssetError("Owned B-roll pins belong to another project.")
+    scenes = {cast(str, scene["id"]): scene for scene in cast(list[dict[str, Any]], plan["scenes"])}
+    assets = {
+        cast(str, asset["id"]): asset for asset in cast(list[dict[str, Any]], index["assets"])
+    }
+    pins: dict[str, dict[str, Any]] = {}
+    for pin in cast(list[dict[str, Any]], document["pins"]):
+        scene_id = cast(str, pin["sceneId"])
+        local_asset_id = cast(str, pin["localAssetId"])
+        if scene_id in pins:
+            raise AssetError(f"Owned B-roll pins repeat scene {scene_id}.")
+        scene = scenes.get(scene_id)
+        if scene is None:
+            raise AssetError(f"Owned B-roll pin references unknown scene {scene_id}.")
+        if not cast(dict[str, Any], scene["broll"]).get("query"):
+            raise AssetError(f"Owned B-roll pin scene {scene_id} has no active B-roll query.")
+        asset = assets.get(local_asset_id)
+        if asset is None:
+            raise AssetError(f"Owned B-roll pin references unavailable asset {local_asset_id}.")
+        if not _kind_matches("broll", cast(str, asset["type"])):
+            raise AssetError(f"Owned B-roll pin {local_asset_id} is not visual media.")
+        if cast(str, asset["license"]).casefold() not in _LICENSES:
+            raise AssetError(f"Owned B-roll pin {local_asset_id} has an unsupported license.")
+        pins[scene_id] = asset
+    return pins
+
+
+def _pinned_evidence(request: dict[str, Any], candidate: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "requestId": request["id"],
+        "candidateId": candidate["id"],
+        "status": "resolved",
+        "tier": "local",
+        "totalScore": 1.0,
+        "scores": {
+            "query": 1.0,
+            "orientation": 1.0,
+            "duration": 1.0,
+            "resolution": 1.0,
+            "quality": 1.0,
+            "license": 1.0,
+            "reuse": 1.0,
+            "preference": 1.0,
+        },
+        "reason": "Selected from an explicit validated creator-owned scene pin.",
+    }
 
 
 def _cache_path(root: Path) -> Path:
@@ -918,8 +980,10 @@ def prepare_assets(
         raise AssetError(f"Cannot resolve assets for an invalid plan: {exc}") from exc
     config = load_config(context.repository_root, style=cast(str, context.project["mode"]))
     assets_root = context.repository_root / cast(str, config["project"]["assets_root"])
+    ensure_builtin_sfx(assets_root)
     index = index_local_assets(context.repository_root, assets_root)
     requests, targets = build_asset_requests(plan)
+    pins = _asset_pins(context, plan, index)
     cache = load_asset_cache(context.repository_root)
     candidates = local_candidates(requests, index) + cached_candidates(requests, cache)
     request_values = cast(list[dict[str, Any]], requests["requests"])
@@ -947,14 +1011,22 @@ def prepare_assets(
     minimum = float(config["assets"]["minimum_score"])
     preferences = asset_preference_scores(context.repository_root)
     for request in request_values:
-        selected, evidence = rank_candidates(
-            request, candidates, minimum, preference_scores=preferences
-        )
+        selected: dict[str, Any] | None
+        evidence: dict[str, Any]
+        pinned = pins.get(cast(str, request["sceneId"])) if request["kind"] == "broll" else None
+        if pinned is not None:
+            selected = _candidate_for_local(request, pinned)
+            evidence = _pinned_evidence(request, selected)
+            candidates.append(selected)
+        else:
+            selected, evidence = rank_candidates(
+                request, candidates, minimum, preference_scores=preferences
+            )
         has_graphic = bool(request["sceneId"] and scene_graphics.get(cast(str, request["sceneId"])))
-        if selected is None and request["kind"] == "broll" and has_graphic:
+        if pinned is None and selected is None and request["kind"] == "broll" and has_graphic:
             evidence["status"] = "graphic-fallback"
             evidence["reason"] = "An existing scene graphic takes precedence over a network search."
-        elif selected is None and adapter is not None:
+        elif pinned is None and selected is None and adapter is not None:
             provider_values = adapter.search(request)
             candidates.extend(provider_values)
             selected, evidence = rank_candidates(
@@ -1142,7 +1214,7 @@ def validate_asset_readiness(context: ProjectContext) -> None:
             context.project_dir / "planning" / "asset-ranking.json",
             "asset-ranking",
         )
-        read_validated_json(
+        index = read_validated_json(
             context.repository_root,
             context.project_dir / "planning" / "asset-index.json",
             "asset-index",
@@ -1165,3 +1237,23 @@ def validate_asset_readiness(context: ProjectContext) -> None:
         if not path.is_file() or sha256_file(path) != asset["sha256"]:
             raise AssetError(f"Resolved asset is missing or has changed: {asset['id']}")
     _validate_resolved_plan(original, resolved, manifest)
+    pins = _asset_pins(context, original, index)
+    resolved_scenes = {
+        cast(str, scene["id"]): scene for scene in cast(list[dict[str, Any]], resolved["scenes"])
+    }
+    manifest_assets = {
+        cast(str, asset["id"]): asset for asset in cast(list[dict[str, Any]], manifest["assets"])
+    }
+    for scene_id, pinned in pins.items():
+        expected_id = f"asset_{cast(str, pinned['sha256'])[:16]}"
+        scene = resolved_scenes[scene_id]
+        if cast(dict[str, Any], scene["broll"])["assetId"] != expected_id:
+            raise AssetError(f"Resolved B-roll does not honor owned pin for {scene_id}.")
+        selected = manifest_assets.get(expected_id)
+        if (
+            selected is None
+            or selected["provider"] != "local"
+            or selected["providerId"] != pinned["path"]
+            or selected["selectedScene"] != scene_id
+        ):
+            raise AssetError(f"Owned B-roll pin evidence is inconsistent for {scene_id}.")

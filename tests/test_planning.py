@@ -194,7 +194,9 @@ def test_phase6_prepares_validated_local_render_input(
     assert render_input["video"]["height"] == 540
     assert render_input["timelineSegments"][0]["id"] == "keep_000001"
     assert render_input["captions"]["words"][0]["id"] == "word_000001"
-    assert render_input["assets"] == {}
+    assert render_input["assets"]
+    assert all(path.endswith(".wav") for path in render_input["assets"].values())
+    assert render_input["scenes"][0]["sfx"]
     staged = planned_context.repository_root / "remotion" / "public" / render_input["videoSrc"]
     assert (
         staged.read_bytes()
@@ -272,6 +274,7 @@ def test_phase7_resolves_owned_broll_music_and_sfx_into_render_input(
     assert resolved["scenes"][0]["sfx"][0]["assetId"] in render_input["assets"]
     assert resolved["globalAudio"]["musicAssetId"] in render_input["assets"]
     assert render_input["globalAudio"]["duckingEnabled"] is True
+    assert render_input["captions"]["enabled"] is True
     assert all(item["license"] == "owned" for item in manifest["assets"])
 
     actual_remotion = Path(__file__).resolve().parents[1] / "remotion"
@@ -283,6 +286,56 @@ def test_phase7_resolves_owned_broll_music_and_sfx_into_render_input(
         validate_draft_outputs(planned_context)
     finally:
         shutil.rmtree(public_project, ignore_errors=True)
+
+
+def test_explicit_owned_broll_pin_overrides_automatic_ranking(
+    planned_context: ProjectContext,
+) -> None:
+    library = planned_context.repository_root / "assets-library"
+    broll = library / "broll" / "creator-choice.mp4"
+    shutil.copy2(planned_context.project_dir / "media" / "proxy.mp4", broll)
+    broll.with_suffix(broll.suffix + ".asset.json").write_text(
+        json.dumps(
+            {
+                "tags": ["unrelated", "creator", "choice"],
+                "license": "owned",
+                "creator": "CutMachine test",
+                "attributionRequired": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+    plan = _plan(planned_context)
+    plan["scenes"][0]["broll"]["query"] = "student using AI laptop"
+    import_plan_document(planned_context, plan)
+    local_id = f"local_{sha256_file(broll)[:16]}"
+    write_validated_json_atomic(
+        planned_context.repository_root,
+        planned_context.project_dir / "planning" / "asset-pins.json",
+        "asset-pins",
+        {
+            "version": 1,
+            "projectId": planned_context.project["projectId"],
+            "pins": [{"sceneId": "scene_000001", "localAssetId": local_id}],
+        },
+    )
+
+    prepare_assets(planned_context)
+    validate_asset_readiness(planned_context)
+    resolved = read_validated_json(
+        planned_context.repository_root,
+        planned_context.project_dir / "planning" / "resolved-edit-plan.json",
+        "edit-plan",
+    )
+    ranking = read_validated_json(
+        planned_context.repository_root,
+        planned_context.project_dir / "planning" / "asset-ranking.json",
+        "asset-ranking",
+    )
+
+    assert resolved["scenes"][0]["broll"]["assetId"] == f"asset_{sha256_file(broll)[:16]}"
+    assert ranking["selections"][0]["totalScore"] == 1
+    assert "explicit validated creator-owned" in ranking["selections"][0]["reason"]
 
 
 def test_phase7_provider_download_is_cached_and_corruption_degrades_cleanly(
@@ -339,7 +392,8 @@ def test_phase7_provider_download_is_cached_and_corruption_degrades_cleanly(
         planned_context.project_dir / "assets" / "manifest.json",
         "asset-manifest",
     )
-    assert searches and first["assets"][0]["provider"] == "pexels"
+    first_provider = next(item for item in first["assets"] if item["provider"] == "pexels")
+    assert searches and first_provider["provider"] == "pexels"
 
     monkeypatch.setenv("CUTMACHINE__ASSETS__PEXELS__ENABLED", "false")
     prepare_assets(planned_context, pexels_transport=lambda *_args: pytest.fail("network used"))
@@ -349,7 +403,8 @@ def test_phase7_provider_download_is_cached_and_corruption_degrades_cleanly(
         "asset-manifest",
     )
     assert len(searches) == 1
-    assert cached["assets"][0]["sha256"] == first["assets"][0]["sha256"]
+    cached_provider = next(item for item in cached["assets"] if item["provider"] == "pexels")
+    assert cached_provider["sha256"] == first_provider["sha256"]
 
     cache = read_validated_json(
         planned_context.repository_root,
@@ -363,7 +418,7 @@ def test_phase7_provider_download_is_cached_and_corruption_degrades_cleanly(
         planned_context.project_dir / "assets" / "manifest.json",
         "asset-manifest",
     )
-    assert degraded["assets"] == []
+    assert not any(item["provider"] == "pexels" for item in degraded["assets"])
     assert degraded["requests"][0]["status"] == "missing"
 
 
@@ -576,6 +631,7 @@ def test_typed_revision_preserves_unrelated_plan_content(
         "projectId": planned_context.project["projectId"],
         "operations": [
             {"op": "set-caption-emphasis", "wordId": "word_000002", "emphasis": True},
+            {"op": "set-captions-enabled", "enabled": False},
             {
                 "op": "set-scene-camera",
                 "sceneId": "scene_000001",
@@ -593,6 +649,7 @@ def test_typed_revision_preserves_unrelated_plan_content(
     after = _plan(planned_context)
 
     assert after["captions"]["words"][1]["emphasis"] is True
+    assert after["captions"]["enabled"] is False
     assert after["scenes"][0]["camera"]["mode"] == "slow-zoom"
     assert after["video"] == before["video"]
     assert after["globalAudio"] == before["globalAudio"]

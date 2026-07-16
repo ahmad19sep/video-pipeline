@@ -198,6 +198,7 @@ def build_render_input(
             for segment in cast(list[dict[str, Any]], timeline["segments"])
         ],
         "captions": {
+            "enabled": captions.get("enabled", True),
             "preset": plan["style"]["captionPreset"],
             "language": captions["language"],
             "safeZone": captions["safeZone"],

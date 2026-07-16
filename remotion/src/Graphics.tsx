@@ -689,23 +689,29 @@ const GraphicContent: React.FC<{
           <Body>{stringProp(graphic, "attribution")}</Body>
         </Stack>
       );
-    case "StatisticCard":
+    case "StatisticCard": {
+      const value = stringProp(graphic, "value", "0");
+      const compactValue = Array.from(value).length > 6;
       return (
         <Stack style={{ alignItems: "center", textAlign: "center" }}>
           <div
             style={{
               color: TOKENS.color.accent,
-              fontSize: "5em",
+              fontSize: compactValue ? "3.2em" : "5em",
               fontWeight: 950,
+              letterSpacing: compactValue ? "-0.04em" : undefined,
               lineHeight: 1,
+              maxWidth: "100%",
+              whiteSpace: "nowrap",
             }}
           >
-            {stringProp(graphic, "value", "0")}
+            {value}
           </div>
           <Title>{stringProp(graphic, "label", "Statistic")}</Title>
           <Body>{stringProp(graphic, "source")}</Body>
         </Stack>
       );
+    }
     case "WarningCard":
       return (
         <div
@@ -810,7 +816,8 @@ const GraphicContent: React.FC<{
 const GraphicCard: React.FC<{
   design: RenderInput["design"];
   graphic: Graphic;
-}> = ({ design, graphic }) => {
+  layout: Scene["layout"];
+}> = ({ design, graphic, layout }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const progress = spring({
@@ -839,20 +846,58 @@ const GraphicCard: React.FC<{
       "MobileScreenFrame",
       "PriceComparison",
     ].includes(graphic.component);
+  const cutaway =
+    layout === "graphic-fullscreen" ||
+    layout === "mobile-demo" ||
+    layout === "browser-demo";
+  const backdropProgress = interpolate(frame, [0, fps * 3.2], [0, 1], {
+    easing: Easing.bezier(0.16, 1, 0.3, 1),
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
   return (
     <AbsoluteFill
       style={{
         alignItems: lowerThird ? "flex-start" : "center",
+        background: cutaway
+          ? "linear-gradient(145deg, #050811 0%, #0a1730 52%, #08101f 100%)"
+          : undefined,
         justifyContent: lowerThird
           ? "flex-end"
-          : full
+          : full || cutaway
             ? "center"
             : "flex-start",
         opacity: interpolate(progress, [0, 1], [0, 1]),
-        padding: lowerThird ? "0 7% 22%" : full ? "9%" : "9% 7%",
+        padding: lowerThird
+          ? "0 7% 22%"
+          : cutaway
+            ? "10% 8% 20%"
+            : full
+              ? "9%"
+              : "9% 7%",
         translate: `0 ${interpolate(progress, [0, 1], [28, 0])}px`,
       }}
     >
+      {cutaway ? (
+        <>
+          <AbsoluteFill
+            style={{
+              background:
+                "radial-gradient(circle at 20% 18%, rgba(250,204,21,0.22), transparent 30%), radial-gradient(circle at 84% 78%, rgba(34,211,238,0.2), transparent 34%)",
+              scale: interpolate(backdropProgress, [0, 1], [1, 1.08]),
+            }}
+          />
+          <AbsoluteFill
+            style={{
+              backgroundImage:
+                "linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px)",
+              backgroundSize: "58px 58px",
+              opacity: 0.52,
+              translate: `${interpolate(backdropProgress, [0, 1], [0, -24])}px ${interpolate(backdropProgress, [0, 1], [0, 18])}px`,
+            }}
+          />
+        </>
+      ) : null}
       <div
         style={{
           ...panelStyle(
@@ -866,12 +911,21 @@ const GraphicCard: React.FC<{
           ...(viralFocal
             ? { background: "transparent", border: "none", boxShadow: "none" }
             : {}),
-          fontSize: "clamp(15px, 2.6vw, 30px)",
+          fontSize: cutaway
+            ? "clamp(20px, 4vw, 42px)"
+            : "clamp(15px, 2.6vw, 30px)",
           maxHeight: lowerThird ? "32%" : "78%",
-          maxWidth: lowerThird ? "70%" : screen ? "92%" : "86%",
+          maxWidth: lowerThird
+            ? "70%"
+            : screen
+              ? "92%"
+              : cutaway
+                ? "88%"
+                : "86%",
           overflow: "hidden",
           padding: screen ? "0.7em" : "1.25em 1.45em",
-          width: screen ? "92%" : undefined,
+          width: screen ? "92%" : cutaway ? "88%" : undefined,
+          zIndex: 1,
         }}
       >
         <GraphicContent design={design} graphic={graphic} />
@@ -896,7 +950,11 @@ export const Graphics: React.FC<Pick<RenderInput, "design" | "scenes">> = ({
           durationInFrames={Math.max(1, end - from)}
           premountFor={fps}
         >
-          <GraphicCard design={design} graphic={graphic} />
+          <GraphicCard
+            design={design}
+            graphic={graphic}
+            layout={scene.layout}
+          />
         </Sequence>
       );
     }),

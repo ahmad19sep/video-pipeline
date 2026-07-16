@@ -338,7 +338,9 @@ export const CutMachineDraft: React.FC<RenderInput> = (input) => {
       />
       <ScreenTreatments design={input.design} scenes={input.scenes} />
       <Graphics design={input.design} scenes={input.scenes} />
-      <Captions captions={input.captions} design={input.design} />
+      {input.captions.enabled ? (
+        <Captions captions={input.captions} design={input.design} />
+      ) : null}
       <TransitionOverlays scenes={input.scenes} />
       <AudioLayers
         scenes={input.scenes}

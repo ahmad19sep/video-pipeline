@@ -19,6 +19,7 @@ const defaultProps: RenderInput = {
     },
   ],
   captions: {
+    enabled: true,
     preset: "viral-punch",
     language: "roman-urdu",
     safeZone: "shorts-default",
