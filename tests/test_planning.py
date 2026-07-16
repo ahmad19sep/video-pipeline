@@ -622,6 +622,49 @@ def test_import_file_rejects_traversal(planned_context: ProjectContext) -> None:
         import_plan_file(planned_context, "../outside.json")
 
 
+def test_rerunning_plan_stage_preserves_a_valid_revised_plan(
+    planned_context: ProjectContext,
+) -> None:
+    """A revision must survive the re-render that applies it.
+
+    `request-revision` writes the plan then invalidates `plan_ready`, so the
+    stage worker reruns. Rebuilding the baseline there would silently discard
+    every Cowork import, typed revision, and editor change.
+    """
+    apply_revision_document(
+        planned_context,
+        {
+            "version": 1,
+            "projectId": planned_context.project["projectId"],
+            "operations": [{"op": "set-caption-preset", "captionPreset": "clean-two-line"}],
+        },
+    )
+
+    generate_plan(planned_context)
+
+    plan = _plan(planned_context)
+    assert plan["style"]["captionPreset"] == "clean-two-line"
+
+
+def test_plan_stage_rebuilds_the_baseline_when_no_valid_plan_remains(
+    planned_context: ProjectContext,
+) -> None:
+    plan_path = planned_context.project_dir / "planning" / "edit-plan.json"
+    stale = copy.deepcopy(_plan(planned_context))
+    stale["timelineVersion"] = 99
+    plan_path.write_text(json.dumps(stale), encoding="utf-8")
+
+    generate_plan(planned_context)
+
+    rebuilt = _plan(planned_context)
+    assert rebuilt["timelineVersion"] == 1
+    assert rebuilt["provenance"]["createdBy"] == "cutmachine-local-baseline"
+
+    plan_path.unlink()
+    generate_plan(planned_context)
+    assert _plan(planned_context)["provenance"]["createdBy"] == "cutmachine-local-baseline"
+
+
 def test_typed_revision_preserves_unrelated_plan_content(
     planned_context: ProjectContext,
 ) -> None:

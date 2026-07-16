@@ -558,18 +558,58 @@ def _planning_input(context: ProjectContext) -> dict[str, Any]:
     }
 
 
+def _persisted_plan(
+    context: ProjectContext,
+    plan_path: Path,
+    timeline: dict[str, Any],
+    transcript: dict[str, Any],
+    media_info: dict[str, Any],
+    catalog: dict[str, Any],
+) -> dict[str, Any] | None:
+    """Return a still-valid persisted plan, or None when one must be built.
+
+    A Cowork import, typed revision, or editor change owns this file once it
+    exists. Revalidate it against every authoritative artifact exactly like a
+    resumed transcript, and rebuild the baseline only when it no longer holds.
+    """
+    if not plan_path.is_file():
+        return None
+    try:
+        plan = read_validated_json(context.repository_root, plan_path, "edit-plan")
+        validate_plan_document(
+            context,
+            plan,
+            timeline=timeline,
+            transcript=transcript,
+            media_info=media_info,
+            catalog=catalog,
+        )
+    except (PersistenceError, PlanningError):
+        return None
+    source = cast(dict[str, Any], media_info["video"])
+    planned = cast(dict[str, Any], plan["video"])
+    if (int(source["height"]) >= int(source["width"])) != (
+        int(planned["height"]) >= int(planned["width"])
+    ):
+        # The plan's orientation no longer follows the source media.
+        return None
+    return plan
+
+
 def generate_plan(context: ProjectContext) -> list[str]:
     timeline, transcript, media_info, catalog = _load_authoritative_inputs(context)
-    plan = build_baseline_plan(context, timeline, transcript, media_info, catalog)
-    validate_plan_document(
-        context,
-        plan,
-        timeline=timeline,
-        transcript=transcript,
-        media_info=media_info,
-        catalog=catalog,
-    )
     plan_path = context.project_dir / "planning" / "edit-plan.json"
+    plan = _persisted_plan(context, plan_path, timeline, transcript, media_info, catalog)
+    if plan is None:
+        plan = build_baseline_plan(context, timeline, transcript, media_info, catalog)
+        validate_plan_document(
+            context,
+            plan,
+            timeline=timeline,
+            transcript=transcript,
+            media_info=media_info,
+            catalog=catalog,
+        )
     catalog_path = context.project_dir / "planning" / "component-catalog.json"
     input_path = context.project_dir / "planning" / "cowork-input.json"
     write_validated_json_atomic(context.repository_root, plan_path, "edit-plan", plan)
