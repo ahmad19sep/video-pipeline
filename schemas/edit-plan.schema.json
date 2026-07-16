@@ -104,7 +104,7 @@
       "required": ["enabled", "preset", "intensity", "lutAssetId"],
       "properties": {
         "enabled": {"type": "boolean"},
-        "preset": {"enum": ["off", "natural-clean", "modern-ai", "soft-professional", "high-contrast-social", "cinematic-warm", "cinematic-cool", "documentary", "low-light-recovery", "custom"]},
+        "preset": {"enum": ["off", "natural-clean", "modern-ai", "soft-professional", "high-contrast-social", "cinematic-warm", "cinematic-cool", "documentary", "low-light-recovery", "teal-orange", "custom"]},
         "intensity": {"type": "number", "minimum": 0, "maximum": 1},
         "lutAssetId": {"anyOf": [{"type": "null"}, {"type": "string", "pattern": "^asset_[A-Za-z0-9_-]+$"}]},
         "exposure": {"type": "number", "minimum": -2, "maximum": 2},

@@ -67,6 +67,31 @@ const SpeakerTrack: React.FC<
   });
 };
 
+// Shape scene progress per camera mode. Punch-ins land fast and hold (a
+// salience cue at the cut); slow zooms drift imperceptibly across the whole
+// scene (an attention reset without removing content); reframes settle early.
+const shapeCameraProgress = (
+  mode: Scene["camera"]["mode"],
+  progress: number,
+): number => {
+  switch (mode) {
+    case "punch-in":
+    case "return-wide": {
+      const ramp = Math.min(1, progress * 4);
+      return 1 - (1 - ramp) ** 3;
+    }
+    case "slow-zoom":
+      return 0.5 - Math.cos(Math.PI * progress) / 2;
+    case "reframe-left":
+    case "reframe-right": {
+      const ramp = Math.min(1, progress * 3);
+      return ramp * ramp * (3 - 2 * ramp);
+    }
+    default:
+      return progress;
+  }
+};
+
 const CameraLayer: React.FC<{
   children: ReactNode;
   design: RenderInput["design"];
@@ -84,19 +109,22 @@ const CameraLayer: React.FC<{
         extrapolateRight: "clamp",
       })
     : 0;
+  const shaped = scene
+    ? shapeCameraProgress(scene.camera.mode, progress)
+    : 0;
   const cameraScale = scene
     ? interpolate(
-        progress,
+        shaped,
         [0, 1],
         [scene.camera.scaleStart, scene.camera.scaleEnd],
       )
     : 1;
-  const x =
-    scene?.camera.focus === "left"
-      ? "3%"
-      : scene?.camera.focus === "right"
-        ? "-3%"
-        : "0%";
+  const focusX =
+    scene?.camera.focus === "left" ? 3 : scene?.camera.focus === "right" ? -3 : 0;
+  const reframing =
+    scene?.camera.mode === "reframe-left" ||
+    scene?.camera.mode === "reframe-right";
+  const x = `${reframing ? focusX * shaped : focusX}%`;
   const screen =
     scene?.layout === "browser-demo" || scene?.layout === "mobile-demo";
   const zoom = scene ? screenZoomStyle(scene, seconds - scene.start) : {};

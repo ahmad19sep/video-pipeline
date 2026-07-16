@@ -93,6 +93,8 @@ Phase 7 additionally creates:
 
 Add owned media beneath `assets-library/broll`, `images`, `music`, or `sfx`. An optional adjacent sidecar such as `clip.mp4.asset.json` may declare `tags`, `license`, `creator`, and `attributionRequired`; LUT sidecars also declare `colorSpace`. Unknown fields are rejected. Video/image thumbnails and audio waveforms are cached during indexing.
 
+The baseline plan places bounded sound effects automatically: an impact under the opening hook title, a whoosh under each visual transition, and sparse accents on emphasized caption words. Placement stays within the style profile's `impact_sfx_per_minute` budget and each entry is a search query resolved against your local SFX library. To make them audible, drop audio files under `assets-library/sfx` with sidecar tags matching `impact`, `whoosh`, or `pop` (for example `hit.wav.asset.json` declaring `{"tags": ["impact", "intro"], "license": "cc0"}`). Unresolved SFX are optional review warnings and the draft renders without them.
+
 Pexels video search is disabled by default. To opt in, set `PEXELS_API_KEY`, enable `assets.pexels.enabled`, and keep both project and current network access enabled. Only short validated English visual queries are sent. Asset-free and offline runs continue with graphics or speaker output.
 
 Phase 8 additionally creates:
@@ -147,6 +149,34 @@ Phase 12 adds an original high-retention portrait style without copying creator 
 - typed kinetic headlines and red/green price or value comparisons
 - a modern phone/search demonstration with local validated strings
 - frame-driven entrances only, with existing safe zones and effect budgets preserved
+
+Post-v2 hardening adds four editor-quality upgrades:
+
+- **Roman Urdu accuracy.** Decoding stays pinned to Urdu with the technical glossary active in every window (hotwords), a hallucination-silence guard, and stronger per-mode models (`small`/`medium`/`large-v3`; larger models download once and materially improve Urdu). Normalization gains word-initial "w", Urdu/Arabic-Indic digit mapping, and a ~190-word high-frequency lexicon so captions read like natural Roman Urdu.
+- **Runtime graphics through Cowork.** `set-scene-graphic` and `remove-scene-graphic` revision operations add, replace, or delete one catalog graphic without reimporting the plan. Example — show a "$1 vs $100" comparison in scene 3:
+
+```json
+{
+  "version": 1,
+  "projectId": "<project-id>",
+  "operations": [
+    {
+      "op": "set-scene-graphic",
+      "sceneId": "scene_000003",
+      "graphic": {
+        "id": "graphic_price_000001",
+        "component": "PriceComparison",
+        "startOffset": 0.5,
+        "endOffset": 3.5,
+        "props": {"lowValue": "$1", "highValue": "$100", "label": "hosting cost"}
+      }
+    }
+  ]
+}
+```
+
+- **Attention pacing.** The baseline plan applies bounded editing-psychology moves: a fast punch-in on the hook scene, imperceptible alternating slow zooms on scenes that outlast the style's visual-change target, and per-mode motion curves in Remotion — all within the `camera_moves_per_minute` budget and 1.0-1.06 scale.
+- **Color grading.** The intensity-scaled `teal-orange` preset joins the bounded grade family; the FFmpeg technical grade remains metric-driven and conservative.
 
 The first transcription run downloads the selected Faster-Whisper model when it is not cached. CUDA is attempted on suitable hardware; failures retry once with the configured CPU int8 fallback and record the reason.
 

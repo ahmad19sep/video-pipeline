@@ -9,12 +9,13 @@ transcription:
   vad: true
   preset: balanced
   beam_size: 5
+  hallucination_silence_threshold: 2.0
   fallback_model: tiny
   models:
-    fast: tiny
-    balanced: small
-    energetic: small
-    cinematic: medium
+    fast: small
+    balanced: medium
+    energetic: medium
+    cinematic: large-v3
 normalization:
   glossary_path: config/technical-glossary.json
   lexicon_path: config/roman-urdu-lexicon.json

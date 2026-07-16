@@ -1,11 +1,19 @@
 # CutMachine Build Status
 
-- Active phase: Phase 12 - Viral social design expansion
+- Active phase: Post-v2 hardening - SFX engine, Urdu accuracy, attention pacing, typed graphic revisions
 - Status: Complete
+- Post-v2 hardening completed: 2026-07-16
 - Phase 12 completed: 2026-07-16
 - Phase 11 completed: 2026-07-16
 - Completed phases: Phase 0 - Repository and doctor; Phase 1 - Orchestrator and project state; Phase 2 - Ingest and transcription; Phase 3 - Transcript normalization; Phase 4 - Timeline automation; Phase 5 - Cowork planning contract; Phase 6 - Remotion MVP; Phase 7 - Asset system; Phase 8 - Technical finishing; Phase 9 - Review and QC; Phase 10 - Advanced design system; Phase 11 - Learning and optimization; Phase 12 - Viral social design expansion
 - Blocking environment finding: None
+
+## Post-v2 hardening (ADR-0045 through ADR-0048)
+
+- Deterministic bounded SFX placement engine feeding the existing tiered asset search
+- Roman Urdu transcription tuning: glossary hotwords, hallucination-silence guard, stronger per-mode models, word-initial "w" and digit transliteration, ~190-word high-frequency lexicon
+- Typed `set-scene-graphic`/`remove-scene-graphic` revision operations for runtime catalog graphics (for example PriceComparison "$1" vs "$100") through Cowork
+- Attention-pacing camera engine (hook punch-in, alternating slow zooms) with per-mode motion curves in Remotion, plus the `teal-orange` grade preset
 
 ## Verified 2026-07-16
 

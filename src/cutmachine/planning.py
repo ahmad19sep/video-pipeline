@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any, cast
 
 from cutmachine.config import load_config
+from cutmachine.pacing import plan_scene_cameras
 from cutmachine.paths import UnsafePathError, resolve_inside
 from cutmachine.persistence import (
     PersistenceError,
@@ -18,6 +19,7 @@ from cutmachine.persistence import (
 )
 from cutmachine.project import ProjectContext
 from cutmachine.schemas import validate_document
+from cutmachine.sfx import plan_scene_sfx
 
 
 class PlanningError(RuntimeError):
@@ -195,6 +197,22 @@ def build_baseline_plan(
                 "screenTreatment": None,
             }
         )
+    sfx_placements = plan_scene_sfx(
+        scenes,
+        caption_words,
+        fps=float(render_config["fps"]),
+        output_duration=float(timeline["outputDuration"]),
+        budgets=cast(dict[str, Any], style["effect_budgets"]),
+    )
+    cameras = plan_scene_cameras(
+        scenes,
+        output_duration=float(timeline["outputDuration"]),
+        budgets=cast(dict[str, Any], style["effect_budgets"]),
+        visual_change_target_seconds=float(style["visual_change_target_seconds"]),
+    )
+    for scene, placement, camera in zip(scenes, sfx_placements, cameras, strict=True):
+        scene["sfx"] = placement
+        scene["camera"] = camera
     style_preset = (
         "documentary"
         if mode == "cinematic"
@@ -657,6 +675,21 @@ def apply_revision_document(context: ProjectContext, revision: object) -> list[s
                 scene["layout"] = operation["layout"]
             elif operation_name == "set-scene-broll-query":
                 scene["broll"]["query"] = operation["query"]
+            elif operation_name == "set-scene-graphic":
+                graphic = copy.deepcopy(cast(dict[str, Any], operation["graphic"]))
+                graphics = cast(list[dict[str, Any]], scene["graphics"])
+                for index, existing in enumerate(graphics):
+                    if existing["id"] == graphic["id"]:
+                        graphics[index] = graphic
+                        break
+                else:
+                    graphics.append(graphic)
+            elif operation_name == "remove-scene-graphic":
+                graphics = cast(list[dict[str, Any]], scene["graphics"])
+                remaining = [item for item in graphics if item["id"] != operation["graphicId"]]
+                if len(remaining) == len(graphics):
+                    raise PlanningError("Revision references an unknown graphic ID.")
+                scene["graphics"] = remaining
             else:
                 raise PlanningError(f"Unsupported revision operation: {operation_name}")
     validate_plan_document(context, updated)

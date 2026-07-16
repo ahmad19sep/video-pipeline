@@ -188,6 +188,7 @@ export type RenderInput = {
       | "cinematic-cool"
       | "documentary"
       | "low-light-recovery"
+      | "teal-orange"
       | "custom";
     colorIntensity: number;
     font: FontDesign;

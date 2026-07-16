@@ -325,8 +325,14 @@ def transcribe_project(
         "word_timestamps": True,
         "vad_filter": bool(transcription_config["vad"]),
         "beam_size": int(transcription_config["beam_size"]),
+        # The initial prompt only biases the first window; hotwords keep the
+        # technical glossary active in every window of a long recording.
         "initial_prompt": ", ".join(glossary),
+        "hotwords": " ".join(glossary) or None,
         "condition_on_previous_text": False,
+        "hallucination_silence_threshold": float(
+            transcription_config["hallucination_silence_threshold"]
+        ),
     }
     effective = requested
     fallback_reason: str | None = None

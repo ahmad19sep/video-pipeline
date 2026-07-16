@@ -70,15 +70,15 @@ def _segments() -> list[FakeSegment]:
 def test_hardware_policy_is_bounded(repository: Path) -> None:
     config = load_config(repository, style="balanced")
 
-    assert select_model_settings(config, "fast", None) == ModelSettings("tiny", "cpu", "int8")
+    assert select_model_settings(config, "fast", None) == ModelSettings("small", "cpu", "int8")
     assert select_model_settings(config, "balanced", 8192) == ModelSettings(
-        "small", "cuda", "float16"
+        "medium", "cuda", "float16"
     )
     assert select_model_settings(config, "energetic", 4096) == ModelSettings(
-        "small", "cuda", "float16"
+        "medium", "cuda", "float16"
     )
     assert select_model_settings(config, "cinematic", 2048) == ModelSettings(
-        "medium", "cpu", "int8"
+        "large-v3", "cpu", "int8"
     )
 
 

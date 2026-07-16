@@ -237,7 +237,7 @@
       "required": ["stylePreset", "colorPreset", "colorIntensity", "font"],
       "properties": {
         "stylePreset": {"enum": ["modern-ai", "minimal-professional", "documentary", "viral-social", "custom"]},
-        "colorPreset": {"enum": ["off", "natural-clean", "modern-ai", "soft-professional", "high-contrast-social", "cinematic-warm", "cinematic-cool", "documentary", "low-light-recovery", "custom"]},
+        "colorPreset": {"enum": ["off", "natural-clean", "modern-ai", "soft-professional", "high-contrast-social", "cinematic-warm", "cinematic-cool", "documentary", "low-light-recovery", "teal-orange", "custom"]},
         "colorIntensity": {"type": "number", "minimum": 0, "maximum": 0.5},
         "font": {"$ref": "#/$defs/font"}
       }

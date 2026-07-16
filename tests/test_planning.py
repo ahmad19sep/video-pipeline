@@ -599,6 +599,75 @@ def test_typed_revision_preserves_unrelated_plan_content(
     assert after["scenes"][0]["graphics"] == before["scenes"][0]["graphics"]
 
 
+def test_graphic_revision_adds_price_comparison_at_runtime(
+    planned_context: ProjectContext,
+) -> None:
+    revision = {
+        "version": 1,
+        "projectId": planned_context.project["projectId"],
+        "operations": [
+            {
+                "op": "remove-scene-graphic",
+                "sceneId": "scene_000001",
+                "graphicId": "graphic_000001",
+            },
+            {
+                "op": "set-scene-graphic",
+                "sceneId": "scene_000001",
+                "graphic": {
+                    "id": "graphic_price_000001",
+                    "component": "PriceComparison",
+                    "startOffset": 0.0,
+                    "endOffset": 0.5,
+                    "props": {"lowValue": "$1", "highValue": "$100", "label": "hosting cost"},
+                },
+            },
+        ],
+    }
+
+    apply_revision_document(planned_context, revision)
+    graphics = _plan(planned_context)["scenes"][0]["graphics"]
+
+    assert [item["id"] for item in graphics] == ["graphic_price_000001"]
+    assert graphics[0]["component"] == "PriceComparison"
+    assert graphics[0]["props"]["lowValue"] == "$1"
+    assert graphics[0]["props"]["highValue"] == "$100"
+
+
+def test_graphic_revision_rejects_unknown_component_and_graphic(
+    planned_context: ProjectContext,
+) -> None:
+    unknown_component = {
+        "version": 1,
+        "projectId": planned_context.project["projectId"],
+        "operations": [
+            {
+                "op": "set-scene-graphic",
+                "sceneId": "scene_000001",
+                "graphic": {
+                    "id": "graphic_evil_000001",
+                    "component": "EvilComponent",
+                    "startOffset": 0.0,
+                    "endOffset": 0.5,
+                    "props": {"title": "x"},
+                },
+            }
+        ],
+    }
+    with pytest.raises(PlanningError, match="Unknown graphic component"):
+        apply_revision_document(planned_context, unknown_component)
+
+    unknown_graphic = {
+        "version": 1,
+        "projectId": planned_context.project["projectId"],
+        "operations": [
+            {"op": "remove-scene-graphic", "sceneId": "scene_000001", "graphicId": "graphic_none"}
+        ],
+    }
+    with pytest.raises(PlanningError, match="unknown graphic ID"):
+        apply_revision_document(planned_context, unknown_graphic)
+
+
 def test_revision_rejects_unknown_word_and_arbitrary_operation(
     planned_context: ProjectContext,
 ) -> None:

@@ -86,13 +86,13 @@ def test_local_normalization_preserves_timing_and_ids(
     assert [word["display"] for word in document["words"]] == [
         "ChatGPT",
         "bohat",
-        "achha",
+        "acha",
         "hai",
     ]
     assert [word["normalizationSource"] for word in document["words"]] == [
         "technical-glossary",
         "local-lexicon",
-        "deterministic-transliteration",
+        "local-lexicon",
         "local-lexicon",
     ]
     assert [word["id"] for word in document["words"]] == [

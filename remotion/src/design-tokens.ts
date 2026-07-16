@@ -93,6 +93,10 @@ export const presentationStyle = (
       return {
         filter: `contrast(${1 + amount * 0.06}) saturate(${1 + amount * 0.07})`,
       };
+    case "teal-orange":
+      return {
+        filter: `sepia(${amount * 0.16}) hue-rotate(${-amount * 10}deg) saturate(${1 + amount * 0.24}) contrast(${1 + amount * 0.08})`,
+      };
     default:
       return {};
   }

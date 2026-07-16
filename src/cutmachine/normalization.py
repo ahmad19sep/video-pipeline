@@ -131,6 +131,29 @@ _TRANSLITERATION = {
     "ں": "n",
     "و": "o",
     "ؤ": "o",
+    "ۓ": "e",
+    # Extended Arabic-Indic (Urdu) digits U+06F0-U+06F9.
+    "۰": "0",
+    "۱": "1",
+    "۲": "2",
+    "۳": "3",
+    "۴": "4",
+    "۵": "5",
+    "۶": "6",
+    "۷": "7",
+    "۸": "8",
+    "۹": "9",
+    # Arabic-Indic digits U+0660-U+0669.
+    "٠": "0",
+    "١": "1",
+    "٢": "2",
+    "٣": "3",
+    "٤": "4",
+    "٥": "5",
+    "٦": "6",
+    "٧": "7",
+    "٨": "8",
+    "٩": "9",
     "\u06c1": "h",
     "\u06be": "h",
     "ۃ": "h",
@@ -221,7 +244,11 @@ def _contains_urdu(value: str) -> bool:
 
 def _transliterate(value: str) -> str:
     pieces: list[str] = []
-    for character in value:
+    for index, character in enumerate(value):
+        # Word-initial waw is the consonant "w" (wala, waqt), not the vowel "o".
+        if character == "و" and index == 0 and len(value) > 1:
+            pieces.append("w")
+            continue
         mapped = _TRANSLITERATION.get(character)
         if mapped is not None:
             pieces.append(mapped)

@@ -19,13 +19,35 @@
         "focus": {"enum": ["center", "face", "left", "right", "custom"]}
       }
     },
+    "graphic": {
+      "type": "object", "additionalProperties": false, "required": ["id", "component", "startOffset", "endOffset", "props"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"},
+        "component": {"type": "string", "pattern": "^[A-Z][A-Za-z0-9]+$"},
+        "startOffset": {"type": "number", "minimum": 0},
+        "endOffset": {"type": "number", "exclusiveMinimum": 0},
+        "props": {
+          "type": "object",
+          "additionalProperties": {
+            "oneOf": [
+              {"type": "string", "maxLength": 500},
+              {"type": "number"},
+              {"type": "boolean"},
+              {"type": "array", "maxItems": 20, "items": {"type": "string", "maxLength": 200}}
+            ]
+          }
+        }
+      }
+    },
     "operation": {
       "oneOf": [
         {"type": "object", "additionalProperties": false, "required": ["op", "wordId", "emphasis"], "properties": {"op": {"const": "set-caption-emphasis"}, "wordId": {"type": "string", "pattern": "^word_[0-9]{6}$"}, "emphasis": {"type": "boolean"}}},
         {"type": "object", "additionalProperties": false, "required": ["op", "sceneId", "camera"], "properties": {"op": {"const": "set-scene-camera"}, "sceneId": {"type": "string", "pattern": "^scene_[0-9]{6}$"}, "camera": {"$ref": "#/$defs/camera"}}},
         {"type": "object", "additionalProperties": false, "required": ["op", "sceneId", "layout"], "properties": {"op": {"const": "set-scene-layout"}, "sceneId": {"type": "string", "pattern": "^scene_[0-9]{6}$"}, "layout": {"enum": ["speaker-fullscreen", "speaker-with-title", "speaker-with-broll", "fullscreen-broll", "split-screen", "browser-demo", "mobile-demo", "graphic-fullscreen", "picture-in-picture"]}}},
         {"type": "object", "additionalProperties": false, "required": ["op", "sceneId", "query"], "properties": {"op": {"const": "set-scene-broll-query"}, "sceneId": {"type": "string", "pattern": "^scene_[0-9]{6}$"}, "query": {"type": ["string", "null"], "minLength": 1, "maxLength": 120}}},
-        {"type": "object", "additionalProperties": false, "required": ["op", "captionPreset"], "properties": {"op": {"const": "set-caption-preset"}, "captionPreset": {"enum": ["roman-word-highlight", "clean-two-line", "hook", "definition", "question", "viral-punch", "boxed-keyword", "urdu-script"]}}}
+        {"type": "object", "additionalProperties": false, "required": ["op", "captionPreset"], "properties": {"op": {"const": "set-caption-preset"}, "captionPreset": {"enum": ["roman-word-highlight", "clean-two-line", "hook", "definition", "question", "viral-punch", "boxed-keyword", "urdu-script"]}}},
+        {"type": "object", "additionalProperties": false, "required": ["op", "sceneId", "graphic"], "properties": {"op": {"const": "set-scene-graphic"}, "sceneId": {"type": "string", "pattern": "^scene_[0-9]{6}$"}, "graphic": {"$ref": "#/$defs/graphic"}}},
+        {"type": "object", "additionalProperties": false, "required": ["op", "sceneId", "graphicId"], "properties": {"op": {"const": "remove-scene-graphic"}, "sceneId": {"type": "string", "pattern": "^scene_[0-9]{6}$"}, "graphicId": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"}}}
       ]
     }
   }

@@ -175,3 +175,19 @@ Add a post-v2 viral social style pack using original Remotion components derived
 ## 2026-07-16 - ADR-0044: Treat social typography as timed information hierarchy
 
 Use a heavy local display stack, one yellow emphasis color, black separation, short word-level entrances, and compact boxed-keyword alternatives instead of permanent full-screen decoration. Drive blur, scale, opacity, and movement from Remotion frames only. Keep modern phone and comparison demonstrations as typed local data, and require representative portrait-frame inspection before completing the design phase.
+
+## 2026-07-16 - ADR-0045: Deterministic bounded SFX placement in the baseline plan
+
+Place baseline sound effects only from three evidence-backed cues in fixed priority order: a hook impact under the opening title graphic, a whoosh under each visual transition, and sparse accents on emphasized caption words. Entries carry search queries only; the existing tiered local asset search resolves them, unresolved entries remain optional warnings, and asset-free projects render unchanged. The engine reuses the plan validator's `impact_sfx_per_minute` allowance formula, enforces global minimum spacing, and keeps every gain below the QC voice-priority ceiling.
+
+## 2026-07-16 - ADR-0046: Tune transcription defaults for Roman Urdu speech
+
+Keep decoding pinned to Urdu, but carry the technical glossary as Faster-Whisper hotwords so English technical terms stay biased in every window rather than only the first prompt. Enable the word-timestamp hallucination-silence guard, and raise the per-mode model defaults (small/medium/large-v3) because tiny and small models are materially weaker on Urdu. Extend the deterministic Roman Urdu layer with word-initial waw as "w", Urdu and Arabic-Indic digit mapping, and a curated high-frequency lexicon so common words use standard Roman spellings instead of raw transliteration.
+
+## 2026-07-16 - ADR-0047: Typed graphic revisions instead of full plan reimports
+
+Add `set-scene-graphic` (add or replace one graphic matched by ID) and `remove-scene-graphic` to the allowlisted plan-revision operations so Cowork can request a specific runtime graphic - for example a PriceComparison of "$1" versus "$100" - without rewriting the whole plan. Revision graphics carry only catalog components and typed props; the full cross-document plan validation (catalog membership, dangerous-prop rejection, scene bounds, animated-text budget, duplicate IDs) reruns before the plan is replaced.
+
+## 2026-07-16 - ADR-0048: Bounded attention pacing from editing psychology
+
+Encode three evidence-backed editing principles as deterministic, budgeted data rather than free-form effects: salience at the open (a fast punch-in on the hook scene), attention reset (imperceptible alternating slow zooms only on scenes that outlast the style's visual-change target), and habituation avoidance (no repeated identical move back to back). Remotion shapes each camera mode's motion curve (fast-settle punch-ins and reframes, full-scene eased zooms) while scale stays within 1.0-1.06 and the camera budget formula matches the plan validator. Add the intensity-scaled `teal-orange` grade to the existing bounded CSS preset family.
