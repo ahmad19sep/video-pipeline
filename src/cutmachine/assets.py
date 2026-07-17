@@ -999,13 +999,17 @@ def prepare_assets(
         and bool(config["network"]["enabled"])
     ):
         key_name = cast(str, pexels_config["api_key_env"])
-        adapter = PexelsAdapter(
-            os.environ.get(key_name, ""),
-            cast(str, pexels_config["endpoint"]),
-            timeout_seconds=int(config["assets"]["provider_timeout_seconds"]),
-            max_candidates=int(config["assets"]["max_candidates"]),
-            transport=pexels_transport or _default_search,
-        )
+        api_key = os.environ.get(key_name, "")
+        # Enabled-but-keyless is a common local state now that the provider is
+        # on by default. Degrade to graphics rather than failing the whole run.
+        if api_key.strip():
+            adapter = PexelsAdapter(
+                api_key,
+                cast(str, pexels_config["endpoint"]),
+                timeout_seconds=int(config["assets"]["provider_timeout_seconds"]),
+                max_candidates=int(config["assets"]["max_candidates"]),
+                transport=pexels_transport or _default_search,
+            )
     selections: list[dict[str, Any]] = []
     selected_candidates: dict[str, dict[str, Any]] = {}
     minimum = float(config["assets"]["minimum_score"])

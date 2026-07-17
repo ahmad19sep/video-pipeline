@@ -66,7 +66,7 @@ assets:
   provider_timeout_seconds: 20
   minimum_score: 0.35
   pexels:
-    enabled: false
+    enabled: true
     endpoint: https://api.pexels.com/v1/videos/search
     api_key_env: PEXELS_API_KEY
 technical:

@@ -422,6 +422,33 @@ def test_phase7_provider_download_is_cached_and_corruption_degrades_cleanly(
     assert degraded["requests"][0]["status"] == "missing"
 
 
+def test_enabled_pexels_without_api_key_degrades_to_graphics(
+    planned_context: ProjectContext,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    plan = _plan(planned_context)
+    plan["scenes"][0]["graphics"] = []
+    plan["scenes"][0]["layout"] = "speaker-fullscreen"
+    plan["scenes"][0]["broll"]["query"] = "student using AI laptop"
+    import_plan_document(planned_context, plan)
+    planned_context.project["settings"]["networkEnabled"] = True
+    monkeypatch.setenv("CUTMACHINE__NETWORK__ENABLED", "true")
+    monkeypatch.setenv("CUTMACHINE__ASSETS__PEXELS__ENABLED", "true")
+    monkeypatch.delenv("PEXELS_API_KEY", raising=False)
+
+    # Enabled provider with no key must fall back, not fail the whole run.
+    prepare_assets(planned_context, pexels_transport=lambda *_a: pytest.fail("network used"))
+    validate_asset_readiness(planned_context)
+
+    manifest = read_validated_json(
+        planned_context.repository_root,
+        planned_context.project_dir / "assets" / "manifest.json",
+        "asset-manifest",
+    )
+    assert not any(item["provider"] == "pexels" for item in manifest["assets"])
+    assert manifest["requests"][0]["status"] == "missing"
+
+
 def test_phase8_applies_validated_owned_lut_below_full_strength(
     planned_context: ProjectContext,
     monkeypatch: pytest.MonkeyPatch,
